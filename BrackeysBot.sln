@@ -1,0 +1,24 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrackeysBot", "BrackeysBot\BrackeysBot.csproj", "{7EE46295-3778-4452-9BAA-91EAFC0F72C3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrackeysBot.API", "BrackeysBot.API\BrackeysBot.API.csproj", "{2FFBAEAA-4577-4710-ABF4-3AC78DCCAD8E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7EE46295-3778-4452-9BAA-91EAFC0F72C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7EE46295-3778-4452-9BAA-91EAFC0F72C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7EE46295-3778-4452-9BAA-91EAFC0F72C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7EE46295-3778-4452-9BAA-91EAFC0F72C3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2FFBAEAA-4577-4710-ABF4-3AC78DCCAD8E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2FFBAEAA-4577-4710-ABF4-3AC78DCCAD8E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2FFBAEAA-4577-4710-ABF4-3AC78DCCAD8E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2FFBAEAA-4577-4710-ABF4-3AC78DCCAD8E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+	EndGlobalSection
+EndGlobal
