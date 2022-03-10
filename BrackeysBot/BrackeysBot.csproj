@@ -9,6 +9,7 @@
         <FileVersion>4.0.0-prerelease.1</FileVersion>
         <Version>4.0.0-prerelease.1</Version>
         <NeutralLanguage>en-US</NeutralLanguage>
+        <RepositoryUrl>https://github.com/oliverbooth/BrackeysBot</RepositoryUrl>
     </PropertyGroup>
 
     <ItemGroup>
