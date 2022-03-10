@@ -6,8 +6,11 @@
         <Nullable>enable</Nullable>
         <AssemblyVersion>4.0.0</AssemblyVersion>
         <FileVersion>4.0.0-prerelease.1</FileVersion>
+        <PackageVersion>4.0.0-prerelease.1</PackageVersion>
         <Version>4.0.0-prerelease.1</Version>
         <NeutralLanguage>en-US</NeutralLanguage>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <RepositoryUrl>https://github.com/oliverbooth/BrackeysBot</RepositoryUrl>
     </PropertyGroup>
 
     <ItemGroup>
