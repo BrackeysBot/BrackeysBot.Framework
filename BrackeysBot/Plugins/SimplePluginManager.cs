@@ -8,8 +8,11 @@ using BrackeysBot.API.Plugins;
 using BrackeysBot.Configuration;
 using BrackeysBot.Resources;
 using DisCatSharp;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using NLog;
 using NLog.Extensions.Logging;
+using ILogger = NLog.ILogger;
 
 namespace BrackeysBot.Plugins;
 
@@ -217,6 +220,16 @@ internal sealed class SimplePluginManager : IPluginManager
                 LoggerFactory = new NLogLoggerFactory()
             });
         }
+
+        var serviceCollection = new ServiceCollection();
+        serviceCollection.AddLogging(builder =>
+        {
+            builder.ClearProviders();
+            builder.AddNLog();
+        });
+        serviceCollection.AddSingleton(this);
+        plugin.ConfigureServices(serviceCollection);
+        plugin.ServiceProvider = serviceCollection.BuildServiceProvider();
 
         plugin.OnLoad();
 

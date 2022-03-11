@@ -15,7 +15,6 @@
     <ItemGroup>
         <PackageReference Include="DisCatSharp" Version="9.9.0"/>
         <PackageReference Include="NLog" Version="4.7.14"/>
-        <PackageReference Include="NLog.Extensions.Logging" Version="1.7.4"/>
     </ItemGroup>
 
 </Project>

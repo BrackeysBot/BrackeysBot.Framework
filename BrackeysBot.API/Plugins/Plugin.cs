@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using BrackeysBot.API.Configuration;
 using DisCatSharp;
+using Microsoft.Extensions.DependencyInjection;
 using NLog;
 
 namespace BrackeysBot.API.Plugins;
@@ -42,11 +43,25 @@ public abstract class Plugin : IDisposable, IConfigurationHolder
     /// <value>The underlying <see cref="DisCatSharp.DiscordClient" />.</value>
     protected internal DiscordClient? DiscordClient { get; internal set; }
 
+    /// <summary>
+    ///     Gets the service provider for this plugin.
+    /// </summary>
+    /// <value>The service provider.</value>
+    public IServiceProvider ServiceProvider { get; internal set; } = null!;
+
     /// <inheritdoc />
     public IConfiguration Configuration { get; internal set; } = null!;
 
     /// <inheritdoc />
     public virtual void Dispose()
+    {
+    }
+
+    /// <summary>
+    ///     Allows configuration of the plugin's <see cref="IServiceProvider" />.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    protected internal virtual void ConfigureServices(IServiceCollection services)
     {
     }
 
