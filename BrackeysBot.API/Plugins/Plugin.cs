@@ -43,7 +43,7 @@ public abstract class Plugin : IDisposable, IConfigurationHolder
     protected internal DiscordClient? DiscordClient { get; internal set; }
 
     /// <inheritdoc />
-    public IConfiguration Configuration { get; internal set; }
+    public IConfiguration Configuration { get; internal set; } = null!;
 
     /// <inheritdoc />
     public virtual void Dispose()
