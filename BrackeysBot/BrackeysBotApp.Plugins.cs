@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using BrackeysBot.API.Configuration;
 using BrackeysBot.API.Exceptions;
 using BrackeysBot.API.Plugins;
+using BrackeysBot.Configuration;
 using BrackeysBot.Resources;
 using DisCatSharp;
 using NLog;
@@ -216,12 +216,11 @@ internal sealed partial class BrackeysBotApp
         plugin.Logger = LogManager.GetLogger(pluginInfo.Name);
         (plugin.DataDirectory = new DirectoryInfo(Path.Combine(PluginDirectory.FullName, pluginInfo.Name))).Create();
 
-        if (plugin.Configuration is JsonFileConfiguration jsonFileConfiguration)
-        {
-            string configFilePath = Path.Combine(plugin.DataDirectory.FullName, "config.json");
-            jsonFileConfiguration.ConfigurationFile = new FileInfo(configFilePath);
-            jsonFileConfiguration.SaveDefault();
-        }
+        var jsonFileConfiguration = new JsonFileConfiguration();
+        string configFilePath = Path.Combine(plugin.DataDirectory.FullName, "config.json");
+        jsonFileConfiguration.ConfigurationFile = new FileInfo(configFilePath);
+        jsonFileConfiguration.SaveDefault();
+        plugin.Configuration = jsonFileConfiguration;
 
         var token = plugin.Configuration.Get<string>("discord.token");
         if (string.IsNullOrWhiteSpace(token))

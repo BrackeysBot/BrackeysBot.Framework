@@ -1,9 +1,12 @@
-﻿using System.Reflection;
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using BrackeysBot.API.Configuration;
 
-namespace BrackeysBot.API.Configuration;
+namespace BrackeysBot.Configuration;
 
 /// <summary>
 ///     Represents a class which implements JSON configuration as read from a config file.
