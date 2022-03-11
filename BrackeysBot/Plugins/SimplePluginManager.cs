@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using BrackeysBot.API.Exceptions;
 using BrackeysBot.API.Plugins;
 using BrackeysBot.Configuration;
 using BrackeysBot.Resources;
 using DisCatSharp;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NLog;
 using NLog.Extensions.Logging;
@@ -47,6 +49,19 @@ internal sealed class SimplePluginManager : IPluginManager
         if (!_loadedPlugins.ContainsKey(plugin)) throw new PluginNotLoadedException(plugin);
         if (!_loadedPlugins[plugin]) return;
 
+        foreach (IHostedService hostedService in plugin.ServiceProvider.GetServices<IHostedService>())
+        {
+            try
+            {
+                hostedService.StopAsync(CancellationToken.None);
+            }
+            catch (Exception exception)
+            {
+                Logger.Error(exception,
+                    $"An exception was thrown when attempting to stop hosted service {hostedService.GetType()}");
+            }
+        }
+
         try
         {
             plugin.OnDisable();
@@ -68,6 +83,19 @@ internal sealed class SimplePluginManager : IPluginManager
         if (plugin is null) throw new ArgumentNullException(nameof(plugin));
         if (!_loadedPlugins.ContainsKey(plugin)) throw new PluginNotLoadedException(plugin);
         if (_loadedPlugins[plugin]) return;
+
+        foreach (IHostedService hostedService in plugin.ServiceProvider.GetServices<IHostedService>())
+        {
+            try
+            {
+                hostedService.StartAsync(CancellationToken.None);
+            }
+            catch (Exception exception)
+            {
+                Logger.Error(exception,
+                    $"An exception was thrown when attempting to start hosted service {hostedService.GetType()}");
+            }
+        }
 
         try
         {
