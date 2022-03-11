@@ -18,13 +18,13 @@ jobs:
       with:
         dotnet-version: 6.0.x
     - name: Restore dependencies
+      run: dotnet nuget add source --username oliverbooth --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/oliverbooth/index.json"
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore
     - name: Test
       run: dotnet test --no-build --verbosity normal
     - name: Publish
-      run: |
-        dotnet nuget add source --username oliverbooth --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/oliverbooth/index.json"
-        dotnet build --no-restore --configuration Release
-        dotnet nuget push "BrackeysBot.API/bin/Release/*.nupkg" --source "github" --api-key ${{ secrets.GITHUB_TOKEN }}
+      run: dotnet nuget add source --username oliverbooth --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/oliverbooth/index.json"
+      run: dotnet build --no-restore --configuration Release
+      run: dotnet nuget push "BrackeysBot.API/bin/Release/*.nupkg" --source "github" --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
