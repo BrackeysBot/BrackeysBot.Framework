@@ -66,6 +66,8 @@ internal sealed class BrackeysBotApp : BackgroundService, IBot
     /// </summary>
     public void LoadLibraries()
     {
+        if (!LibrariesDirectory.Exists) return;
+
         foreach (FileInfo file in LibrariesDirectory.EnumerateFiles("*.dll"))
         {
             try
