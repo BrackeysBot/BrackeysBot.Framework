@@ -1,4 +1,6 @@
-﻿namespace BrackeysBot.API.Plugins;
+﻿using System;
+
+namespace BrackeysBot.API.Plugins;
 
 /// <summary>
 ///     Specifies <see cref="Plugin" /> information such as the plugin's name and version.

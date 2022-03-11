@@ -1,4 +1,6 @@
-﻿namespace BrackeysBot.API.Exceptions;
+﻿using System.IO;
+
+namespace BrackeysBot.API.Exceptions;
 
 /// <summary>
 ///     The exception that is thrown when an attempt to load a named plugin failed because the file does not exist.

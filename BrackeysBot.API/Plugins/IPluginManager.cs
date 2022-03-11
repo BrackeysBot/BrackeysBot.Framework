@@ -1,4 +1,6 @@
-﻿using BrackeysBot.API.Exceptions;
+﻿using System;
+using System.Collections.Generic;
+using BrackeysBot.API.Exceptions;
 
 namespace BrackeysBot.API.Plugins;
 
