@@ -234,6 +234,18 @@ internal sealed class SimplePluginManager : IPluginManager
         jsonFileConfiguration.SaveDefault();
         plugin.Configuration = jsonFileConfiguration;
 
+
+        var serviceCollection = new ServiceCollection();
+        serviceCollection.AddLogging(builder =>
+        {
+            builder.ClearProviders();
+            builder.AddNLog();
+        });
+
+        serviceCollection.AddSingleton(this);
+        serviceCollection.AddSingleton(plugin);
+        serviceCollection.AddSingleton(plugin.Configuration);
+
         var token = plugin.Configuration.Get<string>("discord.token");
         if (string.IsNullOrWhiteSpace(token))
         {
@@ -248,27 +260,20 @@ internal sealed class SimplePluginManager : IPluginManager
             if (intentsAttribute is not null)
                 intents = intentsAttribute.Intents;
 
-            plugin.DiscordClient ??= new DiscordClient(new DiscordConfiguration
+            serviceCollection.AddSingleton(provider =>
             {
-                Intents = intents,
-                LoggerFactory = new NLogLoggerFactory(),
-                Token = token
+                var client = new DiscordClient(new DiscordConfiguration
+                {
+                    Intents = intents,
+                    LoggerFactory = new NLogLoggerFactory(),
+                    ServiceProvider = provider,
+                    Token = token
+                });
+
+                plugin.DiscordClient = client;
+                return client;
             });
         }
-
-        var serviceCollection = new ServiceCollection();
-        serviceCollection.AddLogging(builder =>
-        {
-            builder.ClearProviders();
-            builder.AddNLog();
-        });
-
-        serviceCollection.AddSingleton(this);
-        serviceCollection.AddSingleton(plugin);
-        serviceCollection.AddSingleton(plugin.Configuration);
-
-        if (plugin.DiscordClient is not null)
-            serviceCollection.AddSingleton(plugin.DiscordClient);
 
         plugin.ConfigureServices(serviceCollection);
         plugin.ServiceProvider = serviceCollection.BuildServiceProvider();
