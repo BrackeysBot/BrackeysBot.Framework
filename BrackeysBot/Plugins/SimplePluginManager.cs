@@ -256,6 +256,10 @@ internal sealed class SimplePluginManager : IPluginManager
             builder.AddNLog();
         });
         serviceCollection.AddSingleton(this);
+
+        if (plugin.DiscordClient is not null)
+            serviceCollection.AddSingleton(plugin.DiscordClient);
+
         plugin.ConfigureServices(serviceCollection);
         plugin.ServiceProvider = serviceCollection.BuildServiceProvider();
 
