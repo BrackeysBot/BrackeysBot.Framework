@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -255,7 +255,10 @@ internal sealed class SimplePluginManager : IPluginManager
             builder.ClearProviders();
             builder.AddNLog();
         });
+
         serviceCollection.AddSingleton(this);
+        serviceCollection.AddSingleton(plugin);
+        serviceCollection.AddSingleton(plugin.Configuration);
 
         if (plugin.DiscordClient is not null)
             serviceCollection.AddSingleton(plugin.DiscordClient);
