@@ -1,3 +1,5 @@
+using System;
+
 namespace BrackeysBot.API.Plugins;
 
 /// <summary>

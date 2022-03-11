@@ -1,4 +1,7 @@
-﻿using BrackeysBot.API.Configuration;
+﻿using System;
+using System.IO;
+using System.Threading.Tasks;
+using BrackeysBot.API.Configuration;
 using DisCatSharp;
 using NLog;
 
@@ -40,7 +43,7 @@ public abstract class Plugin : IDisposable, IConfigurationHolder
     protected internal DiscordClient? DiscordClient { get; internal set; }
 
     /// <inheritdoc />
-    public IConfiguration Configuration { get; } = new JsonFileConfiguration();
+    public IConfiguration Configuration { get; internal set; }
 
     /// <inheritdoc />
     public virtual void Dispose()

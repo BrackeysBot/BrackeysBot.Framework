@@ -1,4 +1,6 @@
-﻿namespace BrackeysBot.API.Exceptions;
+﻿using System;
+
+namespace BrackeysBot.API.Exceptions;
 
 /// <summary>
 ///     The exception that is thrown when a plugin could not be loaded because it contains a circular dependency.

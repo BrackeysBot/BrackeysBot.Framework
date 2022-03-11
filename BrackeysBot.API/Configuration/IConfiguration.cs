@@ -1,4 +1,6 @@
-﻿namespace BrackeysBot.API.Configuration;
+﻿using System.IO;
+
+namespace BrackeysBot.API.Configuration;
 
 /// <summary>
 ///     Represents a configuration object.
