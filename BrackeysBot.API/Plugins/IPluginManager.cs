@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using BrackeysBot.API.Exceptions;
+using NLog;
 
 namespace BrackeysBot.API.Plugins;
 
@@ -20,6 +21,12 @@ public interface IPluginManager
     /// </summary>
     /// <value>A read-only view of <see cref="Plugin" /> instances.</value>
     IReadOnlyList<Plugin> LoadedPlugins { get; }
+
+    /// <summary>
+    ///     Gets the logger for this plugin manager.
+    /// </summary>
+    /// <value>The logger.</value>
+    ILogger Logger { get; }
 
     /// <summary>
     ///     Disables a plugin.
@@ -68,6 +75,12 @@ public interface IPluginManager
     ///     The plugin does not contain an embedded resource named <c>plugin.json</c>.
     /// </exception>
     Plugin LoadPlugin(string name);
+
+    /// <summary>
+    ///     Loads all plugins that this plugin manager can detect.
+    /// </summary>
+    /// <returns>The read-only view of the loaded <see cref="Plugin" /> instances.</returns>
+    IReadOnlyList<Plugin> LoadPlugins();
 
     /// <summary>
     ///     Unloads a plugin.

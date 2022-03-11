@@ -11,13 +11,22 @@ using DisCatSharp;
 using NLog;
 using NLog.Extensions.Logging;
 
-namespace BrackeysBot;
+namespace BrackeysBot.Plugins;
 
-internal sealed partial class BrackeysBotApp
+/// <summary>
+///     Represents a plugin manager which can load .NET assemblies as plugins.
+/// </summary>
+internal sealed class SimplePluginManager : IPluginManager
 {
     private readonly List<Assembly> _loadedAssemblies = new();
     private readonly Dictionary<Plugin, bool> _loadedPlugins = new();
     private readonly Stack<string> _pluginLoadStack = new();
+
+    /// <summary>
+    ///     Gets the plugin directory.
+    /// </summary>
+    /// <value>The plugin directory.</value>
+    public DirectoryInfo PluginDirectory { get; } = new("plugins");
 
     /// <inheritdoc />
     public IReadOnlyList<Plugin> EnabledPlugins => _loadedPlugins.Where(p => p.Value).Select(p => p.Key).ToArray();
@@ -26,7 +35,7 @@ internal sealed partial class BrackeysBotApp
     public IReadOnlyList<Plugin> LoadedPlugins => _loadedPlugins.Keys.ToArray();
 
     /// <inheritdoc />
-    public DirectoryInfo PluginDirectory { get; } = new("plugins");
+    public ILogger Logger { get; } = LogManager.GetLogger(nameof(SimplePluginManager));
 
     /// <inheritdoc />
     public void DisablePlugin(Plugin plugin)
@@ -83,34 +92,6 @@ internal sealed partial class BrackeysBotApp
     public Plugin? GetPlugin(string name)
     {
         return _loadedPlugins.Keys.FirstOrDefault(p => string.Equals(p.PluginInfo.Name, name, StringComparison.Ordinal));
-    }
-
-    /// <inheritdoc />
-    public void LoadPlugins()
-    {
-        try
-        {
-            PluginDirectory.Create();
-        }
-        catch (IOException exception)
-        {
-            Logger.Warn(exception, $"The plugin directory '{PluginDirectory.FullName}' could not be created.");
-            return;
-        }
-
-        foreach (FileInfo file in PluginDirectory.EnumerateFiles("*.dll"))
-        {
-            string pluginName = Path.GetFileNameWithoutExtension(file.Name);
-
-            try
-            {
-                LoadPlugin(pluginName);
-            }
-            catch (Exception exception)
-            {
-                Logger.Error(exception, $"Could not load plugin {pluginName}");
-            }
-        }
     }
 
     /// <inheritdoc />
@@ -247,6 +228,40 @@ internal sealed partial class BrackeysBotApp
     }
 
     /// <inheritdoc />
+    public IReadOnlyList<Plugin> LoadPlugins()
+    {
+        try
+        {
+            PluginDirectory.Create();
+        }
+        catch (IOException exception)
+        {
+            Logger.Warn(exception, $"The plugin directory '{PluginDirectory.FullName}' could not be created.");
+            return ArraySegment<Plugin>.Empty;
+        }
+
+        var plugins = new List<Plugin>();
+
+        foreach (FileInfo file in PluginDirectory.EnumerateFiles("*.dll"))
+        {
+            string pluginName = Path.GetFileNameWithoutExtension(file.Name);
+
+            try
+            {
+                Plugin plugin = LoadPlugin(pluginName);
+                if (plugin is not null)
+                    plugins.Add(plugin);
+            }
+            catch (Exception exception)
+            {
+                Logger.Error(exception, $"Could not load plugin {pluginName}");
+            }
+        }
+
+        return plugins.AsReadOnly();
+    }
+
+    /// <inheritdoc />
     public void UnloadPlugin(Plugin plugin)
     {
         DisablePlugin(plugin);
@@ -266,21 +281,5 @@ internal sealed partial class BrackeysBotApp
         plugin.Dispose();
         Logger.Info($"Unloaded plugin {plugin.PluginInfo.Name}");
         _loadedPlugins.Remove(plugin);
-    }
-
-    /// <summary>
-    ///     Disables all currently-loaded and currently-enabled plugins.
-    /// </summary>
-    public void DisablePlugins()
-    {
-        foreach (Plugin plugin in _loadedPlugins.Where(p => p.Value).Select(p => p.Key)) DisablePlugin(plugin);
-    }
-
-    /// <summary>
-    ///     Enables all currently-loaded, but disabled, plugins.
-    /// </summary>
-    public void EnablePlugins()
-    {
-        foreach (Plugin plugin in _loadedPlugins.Where(p => !p.Value).Select(p => p.Key)) EnablePlugin(plugin);
     }
 }

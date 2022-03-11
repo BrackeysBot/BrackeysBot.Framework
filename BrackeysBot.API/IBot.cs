@@ -1,5 +1,4 @@
-﻿using System.IO;
-using BrackeysBot.API.Plugins;
+﻿using BrackeysBot.API.Plugins;
 using NLog;
 
 namespace BrackeysBot.API;
@@ -7,7 +6,7 @@ namespace BrackeysBot.API;
 /// <summary>
 ///     Represents a bot application instance.
 /// </summary>
-public interface IBot : IPluginManager
+public interface IBot
 {
     /// <summary>
     ///     Gets the logger for this bot.
@@ -16,19 +15,14 @@ public interface IBot : IPluginManager
     ILogger Logger { get; }
 
     /// <summary>
-    ///     Gets the plugin directory.
+    ///     Gets the plugin manager.
     /// </summary>
-    /// <value>The plugin directory.</value>
-    DirectoryInfo PluginDirectory { get; }
+    /// <value>The plugin manager.</value>
+    IPluginManager PluginManager { get; }
 
     /// <summary>
     ///     Gets the bot version.
     /// </summary>
     /// <value>The bot version.</value>
     string Version { get; }
-
-    /// <summary>
-    ///     Loads all plugins from <see cref="PluginDirectory" />.
-    /// </summary>
-    void LoadPlugins();
 }
