@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -291,14 +291,22 @@ internal sealed class SimplePluginManager : IPluginManager
         {
             string pluginName = Path.GetFileNameWithoutExtension(file.Name);
 
+            Plugin? plugin = null;
             try
             {
-                Plugin plugin = LoadPlugin(pluginName);
+                plugin = LoadPlugin(pluginName);
                 if (plugin is not null)
                     plugins.Add(plugin);
             }
             catch (Exception exception)
             {
+                if (plugin is not null)
+                {
+                    plugin.DiscordClient?.Dispose();
+                    plugin.DiscordClient = null;
+                    plugin.Dispose();
+                }
+
                 Logger.Error(exception, $"Could not load plugin {pluginName}");
             }
         }
@@ -322,8 +330,8 @@ internal sealed class SimplePluginManager : IPluginManager
 
         plugin.DiscordClient?.Dispose();
         plugin.DiscordClient = null;
-
         plugin.Dispose();
+
         Logger.Info($"Unloaded plugin {plugin.PluginInfo.Name}");
         _loadedPlugins.Remove(plugin);
     }
