@@ -6,8 +6,8 @@
         <Nullable>enable</Nullable>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <AssemblyVersion>4.0.0</AssemblyVersion>
-        <FileVersion>4.0.0-prerelease.2</FileVersion>
-        <Version>4.0.0-prerelease.2</Version>
+        <FileVersion>4.0.0-prerelease.3</FileVersion>
+        <Version>4.0.0-prerelease.3</Version>
         <NeutralLanguage>en-US</NeutralLanguage>
         <RepositoryUrl>https://github.com/oliverbooth/BrackeysBot</RepositoryUrl>
     </PropertyGroup>
