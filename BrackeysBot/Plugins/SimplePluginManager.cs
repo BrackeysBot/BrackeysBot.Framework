@@ -242,10 +242,17 @@ internal sealed class SimplePluginManager : IPluginManager
         }
         else
         {
+            var intents = DiscordIntents.AllUnprivileged;
+            var intentsAttribute = type.GetCustomAttribute<PluginIntentsAttribute>();
+
+            if (intentsAttribute is not null)
+                intents = intentsAttribute.Intents;
+
             plugin.DiscordClient ??= new DiscordClient(new DiscordConfiguration
             {
-                Token = token,
-                LoggerFactory = new NLogLoggerFactory()
+                Intents = intents,
+                LoggerFactory = new NLogLoggerFactory(),
+                Token = token
             });
         }
 
