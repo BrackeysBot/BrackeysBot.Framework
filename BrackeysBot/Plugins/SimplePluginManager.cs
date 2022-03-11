@@ -342,7 +342,7 @@ internal sealed class SimplePluginManager : IPluginManager
         plugin.DiscordClient = null;
         plugin.Dispose();
 
-        Logger.Info($"Unloaded plugin {plugin.PluginInfo.Name}");
+        Logger.Info($"Unloaded plugin {plugin.PluginInfo.Name} {plugin.PluginInfo.Version}");
         _loadedPlugins.Remove(plugin);
     }
 }
