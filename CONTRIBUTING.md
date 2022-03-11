@@ -32,11 +32,3 @@ for (var index = 0; index < someString.Length; index++) // cheaper than foreach,
 }
 ```
 In such a case, the comment is not explaining what the code does - but why it does it that way, rather than a different way. This type of comment is accepted and encouraged.
-
-## Code of Conduct
-In the interest of keeping the Brackeys discord server - and its associated projects - a welcoming environment, we ask that you maintain harassment-free interactions on this repository as you would in the Discord server. This includes, but is not limited to:
-
-* No sexualized language or imagery
-* No attacking individuals or groups based on age, race, nationality, ethnic background, intelligence, or any other characteristic
-* No trolling or non-serious suggestions
-* No publishing private information about an individual such as their name, address (physical or electronic), phone numbers, or any other personally identifying trait

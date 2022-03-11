@@ -1,5 +1,5 @@
 <h1 align="center">BrackeysBot</h1>
-<p align="center"><i>A C# Discord framework tailored for Brackeys discord server, with support for hot-swappable plugins.</i></p>
+<p align="center"><i>A C# Discord framework tailored for the Brackeys Discord server, with support for hot-swappable plugins.</i></p>
 <p align="center">
 <a href="https://github.com/oliverbooth/BrackeysBot/releases"><img src="https://img.shields.io/github/v/release/oliverbooth/BrackeysBot?include_prereleases"></a>
 <a href="https://github.com/oliverbooth/BrackeysBot/actions?query=workflow%3A%22.NET%22"><img src="https://img.shields.io/github/workflow/status/oliverbooth/BrackeysBot/.NET" alt="GitHub Workflow Status" title="GitHub Workflow Status"></a>
