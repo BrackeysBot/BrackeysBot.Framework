@@ -3,7 +3,7 @@ using System;
 namespace BrackeysBot.API.Plugins;
 
 /// <summary>
-///     Specifies the dependencies that should be loaded prior to this <see cref="Plugin" />, so that this plugin functions
+///     Specifies the dependencies that should be loaded prior to this <see cref="MonoPlugin" />, so that this plugin functions
 ///     correctly.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]

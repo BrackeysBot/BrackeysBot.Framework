@@ -3,7 +3,7 @@ using System;
 namespace BrackeysBot.API.Plugins;
 
 /// <summary>
-///     Specifies the author of a <see cref="Plugin" />.
+///     Specifies the author of a <see cref="MonoPlugin" />.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
 public sealed class PluginAuthorAttribute : Attribute

@@ -8,7 +8,7 @@ namespace BrackeysBot.API.Exceptions;
 /// </summary>
 public sealed class PluginNotLoadedException : Exception
 {
-    internal PluginNotLoadedException(Plugin plugin)
+    internal PluginNotLoadedException(IPlugin plugin)
         : base($"{plugin} is not loaded.")
     {
         Plugin = plugin;
@@ -18,5 +18,5 @@ public sealed class PluginNotLoadedException : Exception
     ///     Gets the plugin.
     /// </summary>
     /// <value>The plugin.</value>
-    public Plugin Plugin { get; }
+    public IPlugin Plugin { get; }
 }

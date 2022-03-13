@@ -48,7 +48,7 @@ internal sealed class BrackeysBotApp : BackgroundService, IBot
     /// </summary>
     public void DisablePlugins()
     {
-        foreach (Plugin plugin in PluginManager.EnabledPlugins)
+        foreach (IPlugin plugin in PluginManager.EnabledPlugins)
             PluginManager.DisablePlugin(plugin);
     }
 
@@ -57,7 +57,7 @@ internal sealed class BrackeysBotApp : BackgroundService, IBot
     /// </summary>
     public void EnablePlugins()
     {
-        foreach (Plugin plugin in PluginManager.LoadedPlugins)
+        foreach (IPlugin plugin in PluginManager.LoadedPlugins)
             PluginManager.EnablePlugin(plugin);
     }
 
@@ -107,7 +107,9 @@ internal sealed class BrackeysBotApp : BackgroundService, IBot
     public override Task StopAsync(CancellationToken cancellationToken)
     {
         DisablePlugins();
-        foreach (Plugin plugin in PluginManager.LoadedPlugins) PluginManager.UnloadPlugin(plugin);
+
+        foreach (IPlugin plugin in PluginManager.LoadedPlugins)
+            PluginManager.UnloadPlugin(plugin);
 
         return base.StopAsync(cancellationToken);
     }

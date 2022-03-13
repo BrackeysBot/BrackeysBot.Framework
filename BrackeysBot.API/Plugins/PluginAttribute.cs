@@ -3,7 +3,7 @@
 namespace BrackeysBot.API.Plugins;
 
 /// <summary>
-///     Specifies <see cref="Plugin" /> information such as the plugin's name and version.
+///     Specifies <see cref="MonoPlugin" /> information such as the plugin's name and version.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
 public sealed class PluginAttribute : Attribute

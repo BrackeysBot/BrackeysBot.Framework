@@ -11,46 +11,31 @@ namespace BrackeysBot.API.Plugins;
 /// <summary>
 ///     Represents a bot plugin.
 /// </summary>
-public abstract class Plugin : IDisposable, IConfigurationHolder
+public abstract class MonoPlugin : IPlugin
 {
-    /// <summary>
-    ///     Gets the data directory for this plugin.
-    /// </summary>
-    /// <value>The data directory.</value>
+    /// <inheritdoc />
+    public IConfiguration Configuration { get; internal set; } = null!;
+
+    /// <inheritdoc />
     public DirectoryInfo DataDirectory { get; internal set; } = null!;
 
-    /// <summary>
-    ///     Gets the logger for this plugin.
-    /// </summary>
-    /// <value>The plugin's logger.</value>
+    /// <inheritdoc />
     public ILogger Logger { get; internal set; } = null!;
 
-    /// <summary>
-    ///     Gets the information about this plugin.
-    /// </summary>
-    /// <value>A <see cref="BrackeysBot.API.Plugins.PluginInfo" /> object containing</value>
+    /// <inheritdoc />
     public PluginInfo PluginInfo { get; internal set; } = null!;
 
-    /// <summary>
-    ///     Gets the manager which owns this plugin.
-    /// </summary>
-    /// <value>The plugin manager.</value>
+    /// <inheritdoc />
     public IPluginManager PluginManager { get; internal set; } = null!;
+
+    /// <inheritdoc />
+    public IServiceProvider ServiceProvider { get; internal set; } = null!;
 
     /// <summary>
     ///     Gets the underlying <see cref="DisCatSharp.DiscordClient" /> instance.
     /// </summary>
     /// <value>The underlying <see cref="DisCatSharp.DiscordClient" />.</value>
     protected internal DiscordClient? DiscordClient { get; internal set; }
-
-    /// <summary>
-    ///     Gets the service provider for this plugin.
-    /// </summary>
-    /// <value>The service provider.</value>
-    public IServiceProvider ServiceProvider { get; internal set; } = null!;
-
-    /// <inheritdoc />
-    public IConfiguration Configuration { get; internal set; } = null!;
 
     /// <inheritdoc />
     public virtual void Dispose()
