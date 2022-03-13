@@ -247,8 +247,8 @@ internal sealed class SimplePluginManager : IPluginManager
             builder.AddNLog();
         });
 
-        serviceCollection.AddSingleton(this);
-        serviceCollection.AddSingleton(plugin);
+        serviceCollection.AddSingleton<IPluginManager>(this);
+        serviceCollection.AddSingleton(plugin.GetType(), plugin);
         serviceCollection.AddSingleton(plugin.Configuration);
 
         var token = plugin.Configuration.Get<string>("discord.token");
