@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -304,7 +304,7 @@ internal sealed class SimplePluginManager : IPluginManager
         catch (IOException exception)
         {
             Logger.Warn(exception, $"The plugin directory '{PluginDirectory.FullName}' could not be created.");
-            return ArraySegment<MonoPlugin>.Empty;
+            return ArraySegment<IPlugin>.Empty;
         }
 
         var plugins = new List<IPlugin>();
