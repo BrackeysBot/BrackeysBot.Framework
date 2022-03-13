@@ -326,7 +326,7 @@ internal sealed class SimplePluginManager : IPluginManager
                 }
 
                 plugin?.Dispose();
-                Logger.Info(exception, string.Format(LoggerMessages.ExceptionWhenLoadingPlugin, pluginName));
+                Logger.Error(exception, string.Format(LoggerMessages.ExceptionWhenLoadingPlugin, pluginName));
             }
         }
 
@@ -346,7 +346,7 @@ internal sealed class SimplePluginManager : IPluginManager
         }
         catch (Exception exception)
         {
-            Logger.Info(exception, string.Format(LoggerMessages.ExceptionWhenUnloadingPlugin, plugin.PluginInfo.Name));
+            Logger.Error(exception, string.Format(LoggerMessages.ExceptionWhenUnloadingPlugin, plugin.PluginInfo.Name));
         }
 
         monoPlugin.DiscordClient?.Dispose();
