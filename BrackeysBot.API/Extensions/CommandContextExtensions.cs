@@ -6,7 +6,7 @@ namespace BrackeysBot.API.Extensions;
 /// <summary>
 ///     Extension methods for <see cref="CommandContext" />.
 /// </summary>
-internal static class CommandContextExtensions
+public static class CommandContextExtensions
 {
     /// <summary>
     ///     Acknowledges the message provided by a <see cref="CommandContext" /> by reacting to it.
