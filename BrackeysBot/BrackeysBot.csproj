@@ -26,6 +26,18 @@
             <Generator>ResXFileCodeGenerator</Generator>
             <LastGenOutput>ExceptionMessages.Designer.cs</LastGenOutput>
         </EmbeddedResource>
+        <EmbeddedResource Update="Resources\LoggerMessages.resx">
+            <Generator>ResXFileCodeGenerator</Generator>
+            <LastGenOutput>LoggerMessages.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Update="Resources\LoggerMessages.Designer.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>LoggerMessages.resx</DependentUpon>
+        </Compile>
     </ItemGroup>
 
 </Project>

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -58,8 +58,7 @@ internal sealed class SimplePluginManager : IPluginManager
             }
             catch (Exception exception)
             {
-                Logger.Error(exception,
-                    $"An exception was thrown when attempting to stop hosted service {hostedService.GetType()}");
+                Logger.Error(exception, string.Format(LoggerMessages.ExceptionWhenStoppingService, hostedService.GetType()));
             }
         }
 
@@ -69,13 +68,13 @@ internal sealed class SimplePluginManager : IPluginManager
         }
         catch (Exception exception)
         {
-            Logger.Error(exception, $"An exception was thrown when attempting to disable {plugin.PluginInfo.Name}");
+            Logger.Error(exception, string.Format(LoggerMessages.ExceptionWhenDisablingPlugin, plugin.PluginInfo.Name));
         }
 
         _loadedPlugins[plugin] = false;
 
         monoPlugin.DiscordClient?.DisconnectAsync();
-        Logger.Info($"Disabled plugin {plugin.PluginInfo.Name} {plugin.PluginInfo.Version}");
+        Logger.Info(string.Format(LoggerMessages.DisabledPlugin, plugin.PluginInfo.Name, plugin.PluginInfo.Version));
     }
 
     /// <inheritdoc />
@@ -94,8 +93,7 @@ internal sealed class SimplePluginManager : IPluginManager
             }
             catch (Exception exception)
             {
-                Logger.Error(exception,
-                    $"An exception was thrown when attempting to start hosted service {hostedService.GetType()}");
+                Logger.Error(exception, string.Format(LoggerMessages.ExceptionWhenStartingService, hostedService.GetType()));
             }
         }
 
@@ -105,14 +103,14 @@ internal sealed class SimplePluginManager : IPluginManager
         }
         catch (Exception exception)
         {
-            Logger.Error(exception, $"An exception was thrown when attempting to enable {plugin.PluginInfo.Name}");
+            Logger.Error(exception, string.Format(LoggerMessages.ExceptionWhenEnablingPlugin, plugin.PluginInfo.Name));
             return;
         }
 
         monoPlugin.DiscordClient?.ConnectAsync();
 
         _loadedPlugins[plugin] = true;
-        Logger.Info($"Enabled {plugin.PluginInfo.Name} {plugin.PluginInfo.Version}");
+        Logger.Info(string.Format(LoggerMessages.EnabledPlugin, plugin.PluginInfo.Name, plugin.PluginInfo.Version));
     }
 
     /// <inheritdoc />
@@ -139,7 +137,7 @@ internal sealed class SimplePluginManager : IPluginManager
             _loadedPlugins.Keys.FirstOrDefault(p => string.Equals(p.PluginInfo.Name, name, StringComparison.Ordinal));
         if (loadedPlugin is not null)
         {
-            Logger.Debug($"Plugin {name} was requested to load, but is already loaded. Skipping!");
+            Logger.Debug(string.Format(LoggerMessages.PluginAlreadyLoaded, name));
             return loadedPlugin;
         }
 
@@ -153,7 +151,7 @@ internal sealed class SimplePluginManager : IPluginManager
         Assembly assembly = Assembly.LoadFile(pluginFileName); // DO NOT LoadFrom here. LoadFile does not load into domain
         if (_loadedAssemblies.Exists(a => a.Location == assembly.Location))
         {
-            Logger.Debug($"Assembly {assembly} already loaded. Using cache");
+            Logger.Debug(string.Format(LoggerMessages.AssemblyAlreadyLoaded, assembly));
             assembly = _loadedAssemblies.Find(a => a.Location == assembly.Location)!;
         }
         else
@@ -161,7 +159,7 @@ internal sealed class SimplePluginManager : IPluginManager
             assembly = Assembly.LoadFrom(pluginFileName); // loads into domain
             _loadedAssemblies.Add(assembly);
 
-            Logger.Debug($"Loaded new assembly {assembly}");
+            Logger.Debug(string.Format(LoggerMessages.LoadedNewAssembly, assembly));
         }
 
         Type[] pluginTypes = assembly.GetTypes().Where(t => t.IsSubclassOf(typeof(MonoPlugin))).ToArray();
@@ -184,8 +182,8 @@ internal sealed class SimplePluginManager : IPluginManager
         var dependenciesAttribute = type.GetCustomAttribute<PluginDependenciesAttribute>();
         if (dependenciesAttribute?.Dependencies is {Length: > 0} dependencyNames)
         {
-            Logger.Debug(
-                $"{pluginAttribute.Name} requires {dependencyNames.Length} dependencies: {string.Join(", ", dependencyNames)}");
+            Logger.Debug(string.Format(LoggerMessages.PluginRequiresDependencies, pluginAttribute.Name, dependencyNames.Length,
+                string.Join(", ", dependencyNames)));
 
             foreach (string dependencyName in dependencyNames)
             {
@@ -196,7 +194,7 @@ internal sealed class SimplePluginManager : IPluginManager
                 }
                 catch (Exception exception)
                 {
-                    Logger.Error(exception, $"Could not load dependency '{dependencyName}'");
+                    Logger.Error(exception, string.Format(LoggerMessages.CouldNotLoadDependency, dependencyName));
                     return null!; // return value will be ignored anyway
                 }
             }
@@ -205,8 +203,8 @@ internal sealed class SimplePluginManager : IPluginManager
         string assemblyVersion = assembly.GetName().Version?.ToString(3) ?? pluginAttribute.Version;
         if (!string.Equals(pluginAttribute.Version, assemblyVersion))
         {
-            Logger.Warn(
-                $"Plugin version {pluginAttribute.Version} and assembly version {assemblyVersion} do not match for {pluginAttribute.Name}!");
+            Logger.Warn(string.Format(LoggerMessages.PluginVersionMismatch, pluginAttribute.Version, assemblyVersion,
+                pluginAttribute.Name));
         }
 
         PluginInfo.PluginAuthorInfo? author = null;
@@ -256,8 +254,7 @@ internal sealed class SimplePluginManager : IPluginManager
         var token = plugin.Configuration.Get<string>("discord.token");
         if (string.IsNullOrWhiteSpace(token))
         {
-            Logger.Warn(
-                $"No token was specified in the config file for {plugin.PluginInfo.Name}! No client will be created for this plugin.");
+            Logger.Warn(string.Format(LoggerMessages.NoPluginToken, plugin.PluginInfo.Name));
         }
         else
         {
@@ -289,7 +286,7 @@ internal sealed class SimplePluginManager : IPluginManager
 
         _loadedPlugins.Add(plugin, false);
 
-        Logger.Info($"Loaded plugin {pluginInfo.Name} {pluginInfo.Version}");
+        Logger.Info(string.Format(LoggerMessages.LoadedPlugin, plugin.PluginInfo.Name, plugin.PluginInfo.Version));
         _pluginLoadStack.Pop();
         return plugin;
     }
@@ -303,7 +300,7 @@ internal sealed class SimplePluginManager : IPluginManager
         }
         catch (IOException exception)
         {
-            Logger.Warn(exception, $"The plugin directory '{PluginDirectory.FullName}' could not be created.");
+            Logger.Warn(exception, string.Format(LoggerMessages.PluginDirectoryCantBeCreated, PluginDirectory.FullName));
             return ArraySegment<IPlugin>.Empty;
         }
 
@@ -329,7 +326,7 @@ internal sealed class SimplePluginManager : IPluginManager
                 }
 
                 plugin?.Dispose();
-                Logger.Error(exception, $"Could not load plugin {pluginName}");
+                Logger.Info(exception, string.Format(LoggerMessages.ExceptionWhenLoadingPlugin, pluginName));
             }
         }
 
@@ -349,14 +346,14 @@ internal sealed class SimplePluginManager : IPluginManager
         }
         catch (Exception exception)
         {
-            Logger.Error(exception, $"An exception was thrown when attempting to unload {plugin.PluginInfo.Name}");
+            Logger.Info(exception, string.Format(LoggerMessages.ExceptionWhenUnloadingPlugin, plugin.PluginInfo.Name));
         }
 
         monoPlugin.DiscordClient?.Dispose();
         monoPlugin.DiscordClient = null;
         plugin.Dispose();
 
-        Logger.Info($"Unloaded plugin {plugin.PluginInfo.Name} {plugin.PluginInfo.Version}");
+        Logger.Info(string.Format(LoggerMessages.UnloadedPlugin, plugin.PluginInfo.Name, plugin.PluginInfo.Version));
         _loadedPlugins.Remove(plugin);
     }
 }

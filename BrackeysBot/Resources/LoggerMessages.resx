@@ -1,0 +1,80 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<root>
+    <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root"
+                xmlns="">
+        <xsd:element name="root" msdata:IsDataSet="true">
+
+        </xsd:element>
+    </xsd:schema>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>1.3</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral,
+            PublicKeyToken=b77a5c561934e089
+        </value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral,
+            PublicKeyToken=b77a5c561934e089
+        </value>
+    </resheader>
+    <data name="AssemblyAlreadyLoaded" xml:space="preserve">
+        <value>Assembly {0} already loaded. Using cache</value>
+    </data>
+    <data name="CouldNotLoadDependency" xml:space="preserve">
+        <value>Could not load dependency '{0}'</value>
+    </data>
+    <data name="DisabledPlugin" xml:space="preserve">
+        <value>Disabled plugin {0} {1}</value>
+    </data>
+    <data name="EnabledPlugin" xml:space="preserve">
+        <value>Enabled plugin {0} {1}</value>
+    </data>
+    <data name="ExceptionWhenDisablingPlugin" xml:space="preserve">
+        <value>An exception was thrown when attempting to disable '{0}'</value>
+    </data>
+    <data name="ExceptionWhenEnablingPlugin" xml:space="preserve">
+        <value>An exception was thrown when attempting to enable '{0}'</value>
+    </data>
+    <data name="ExceptionWhenLoadingPlugin" xml:space="preserve">
+        <value>An exception was thrown when attempting to load '{0}'</value>
+    </data>
+    <data name="ExceptionWhenStartingService" xml:space="preserve">
+        <value>An exception was thrown when attempting to start hosted service '{0}'</value>
+    </data>
+    <data name="ExceptionWhenStoppingService" xml:space="preserve">
+        <value>An exception was thrown when attempting to stop hosted service '{0}'</value>
+    </data>
+    <data name="ExceptionWhenUnloadingPlugin" xml:space="preserve">
+        <value>An exception was thrown when attempting to unload '{0}'</value>
+    </data>
+    <data name="LoadedNewAssembly" xml:space="preserve">
+        <value>Loaded new assembly {0}</value>
+    </data>
+    <data name="LoadedPlugin" xml:space="preserve">
+        <value>Loaded plugin {0} {1}</value>
+    </data>
+    <data name="NoPluginToken" xml:space="preserve">
+        No token was specified in the config file for '{0}'! No client will be created for this plugin.
+    </data>
+    <data name="PluginAlreadyLoaded" xml:space="preserve">
+        <value>Plugin '{0}' was requested to load, but is already loaded. Skipping!</value>
+    </data>
+    <data name="PluginDirectoryCantBeCreated" xml:space="preserve">
+        <value>The plugin directory '{0}' could not be created</value>
+    </data>
+    <data name="PluginRequiresDependencies" xml:space="preserve">
+        <value>Plugin '{0}' requires {1} dependencies: {2}</value>
+    </data>
+    <data name="PluginVersionMismatch" xml:space="preserve">
+        <value>Plugin version {0} and assembly version {1} do not match for '{2}'!</value>
+    </data>
+    <data name="UnloadedPlugin" xml:space="preserve">
+        <value>Unloaded plugin {0} {1}</value>
+    </data>
+</root>
