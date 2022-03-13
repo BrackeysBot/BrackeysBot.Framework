@@ -65,7 +65,7 @@ internal sealed class SimplePluginManager : IPluginManager
 
         try
         {
-            monoPlugin.OnDisable();
+            monoPlugin.OnDisable().GetAwaiter().GetResult();
         }
         catch (Exception exception)
         {
@@ -101,7 +101,7 @@ internal sealed class SimplePluginManager : IPluginManager
 
         try
         {
-            monoPlugin.OnEnable();
+            monoPlugin.OnEnable().GetAwaiter().GetResult();
         }
         catch (Exception exception)
         {
@@ -285,7 +285,7 @@ internal sealed class SimplePluginManager : IPluginManager
         plugin.ConfigureServices(serviceCollection);
         plugin.ServiceProvider = serviceCollection.BuildServiceProvider();
 
-        plugin.OnLoad();
+        plugin.OnLoad().GetAwaiter().GetResult();
 
         _loadedPlugins.Add(plugin, false);
 
@@ -345,7 +345,7 @@ internal sealed class SimplePluginManager : IPluginManager
 
         try
         {
-            monoPlugin.OnUnload();
+            monoPlugin.OnUnload().GetAwaiter().GetResult();
         }
         catch (Exception exception)
         {
