@@ -3,10 +3,10 @@
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
         <Nullable>enable</Nullable>
-        <AssemblyVersion>4.0.0.6</AssemblyVersion>
-        <FileVersion>4.0.0-prerelease.7</FileVersion>
-        <PackageVersion>4.0.0-prerelease.7</PackageVersion>
-        <Version>4.0.0-prerelease.7</Version>
+        <AssemblyVersion>4.0.0.8</AssemblyVersion>
+        <FileVersion>4.0.0-prerelease.8</FileVersion>
+        <PackageVersion>4.0.0-prerelease.8</PackageVersion>
+        <Version>4.0.0-prerelease.8</Version>
         <NeutralLanguage>en-US</NeutralLanguage>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <RepositoryUrl>https://github.com/oliverbooth/BrackeysBot</RepositoryUrl>
