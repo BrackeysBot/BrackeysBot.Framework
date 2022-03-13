@@ -60,7 +60,7 @@
         <value>Loaded plugin {0} {1}</value>
     </data>
     <data name="NoPluginToken" xml:space="preserve">
-        No token was specified in the config file for '{0}'! No client will be created for this plugin.
+        <value>No token was specified in the config file for '{0}'! No client will be created for this plugin.</value>
     </data>
     <data name="PluginAlreadyLoaded" xml:space="preserve">
         <value>Plugin '{0}' was requested to load, but is already loaded. Skipping!</value>
