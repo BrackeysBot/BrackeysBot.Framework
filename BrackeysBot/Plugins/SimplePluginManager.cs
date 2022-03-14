@@ -1,9 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using BrackeysBot.API.Exceptions;
 using BrackeysBot.API.Plugins;
 using BrackeysBot.ArgumentConverters;
@@ -297,6 +298,7 @@ internal sealed class SimplePluginManager : IPluginManager
                 string.Join(", ", commandNames)));
 
             CheckDuplicateCommands(plugin, commandNames);
+            RegisterCommandEvents(plugin, commandsNext);
         }
 
         _loadedPlugins.Add(plugin, false);
@@ -386,5 +388,16 @@ internal sealed class SimplePluginManager : IPluginManager
                     Logger.Warn(string.Format(LoggerMessages.PluginCommandConflict, pluginName, command, currentPluginName));
             }
         }
+    }
+
+    private void RegisterCommandEvents(IPlugin plugin, CommandsNextExtension commandsNext)
+    {
+        commandsNext.CommandErrored += (_, args) =>
+        {
+            CommandContext context = args.Context;
+            var commandName = $"{context.Prefix}{context.Command.Name}";
+            plugin.Logger.Error(args.Exception, $"An exception was thrown when executing {commandName}");
+            return Task.CompletedTask;
+        };
     }
 }
