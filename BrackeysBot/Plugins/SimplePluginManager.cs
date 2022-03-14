@@ -6,10 +6,12 @@ using System.Reflection;
 using System.Threading;
 using BrackeysBot.API.Exceptions;
 using BrackeysBot.API.Plugins;
+using BrackeysBot.ArgumentConverters;
 using BrackeysBot.Configuration;
 using BrackeysBot.Resources;
 using DisCatSharp;
 using DisCatSharp.CommandsNext;
+using DisCatSharp.CommandsNext.Converters;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -287,6 +289,9 @@ internal sealed class SimplePluginManager : IPluginManager
         CommandsNextExtension? commandsNext = plugin.DiscordClient?.GetCommandsNext();
         if (commandsNext is not null)
         {
+            commandsNext.UnregisterConverter<TimeSpanConverter>();
+            commandsNext.RegisterConverter(new TimeSpanArgumentConverter());
+
             string[] commandNames = commandsNext.RegisteredCommands.Keys.ToArray();
             Logger.Info(string.Format(LoggerMessages.PluginRegisteredCommands, pluginInfo.Name, commandNames.Length,
                 string.Join(", ", commandNames)));
