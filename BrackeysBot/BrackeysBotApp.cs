@@ -24,9 +24,18 @@ internal sealed class BrackeysBotApp : BackgroundService, IBot
     /// </summary>
     public BrackeysBotApp()
     {
+        var apiAssembly = Assembly.GetAssembly(typeof(IBot))!;
         var assembly = Assembly.GetAssembly(typeof(BrackeysBotApp))!;
+
+        ApiVersion = apiAssembly.GetName().Version!.ToString(3);
         Version = assembly.GetName().Version!.ToString(3);
     }
+
+    /// <summary>
+    ///     Gets the version of the API in use.
+    /// </summary>
+    /// <value>The API version.</value>
+    public string ApiVersion { get; }
 
     /// <summary>
     ///     Gets the <c>libraries</c> directory for this bot.
@@ -87,7 +96,7 @@ internal sealed class BrackeysBotApp : BackgroundService, IBot
     /// <inheritdoc />
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        Logger.Info($"Starting Brackeys Bot version {Version}");
+        Logger.Info($"Starting Brackeys Bot version {Version} with API version {ApiVersion}");
 
         LoadLibraries();
         int libraryCount = _libraries.Count;
