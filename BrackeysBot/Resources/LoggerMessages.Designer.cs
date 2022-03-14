@@ -187,11 +187,29 @@ namespace BrackeysBot.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Plugin &apos;{0}&apos; registered command &apos;{1}&apos; which conflicts with a command registered by &apos;{2}&apos;.
+        /// </summary>
+        internal static string PluginCommandConflict {
+            get {
+                return ResourceManager.GetString("PluginCommandConflict", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The plugin directory &apos;{0}&apos; could not be created.
         /// </summary>
         internal static string PluginDirectoryCantBeCreated {
             get {
                 return ResourceManager.GetString("PluginDirectoryCantBeCreated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Plugin &apos;{0}&apos; registered {1} commands: {2}.
+        /// </summary>
+        internal static string PluginRegisteredCommands {
+            get {
+                return ResourceManager.GetString("PluginRegisteredCommands", resourceCulture);
             }
         }
         

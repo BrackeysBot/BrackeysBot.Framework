@@ -65,8 +65,14 @@
     <data name="PluginAlreadyLoaded" xml:space="preserve">
         <value>Plugin '{0}' was requested to load, but is already loaded. Skipping!</value>
     </data>
+    <data name="PluginCommandConflict" xml:space="preserve">
+        <value>Plugin '{0}' registered command '{1}' which conflicts with a command registered by '{2}'</value>
+    </data>
     <data name="PluginDirectoryCantBeCreated" xml:space="preserve">
         <value>The plugin directory '{0}' could not be created</value>
+    </data>
+    <data name="PluginRegisteredCommands" xml:space="preserve">
+        <value>Plugin '{0}' registered {1} commands: {2}</value>
     </data>
     <data name="PluginRequiresDependencies" xml:space="preserve">
         <value>Plugin '{0}' requires {1} dependencies: {2}</value>

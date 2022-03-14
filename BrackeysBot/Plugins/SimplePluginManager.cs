@@ -9,6 +9,7 @@ using BrackeysBot.API.Plugins;
 using BrackeysBot.Configuration;
 using BrackeysBot.Resources;
 using DisCatSharp;
+using DisCatSharp.CommandsNext;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -23,6 +24,7 @@ namespace BrackeysBot.Plugins;
 /// </summary>
 internal sealed class SimplePluginManager : IPluginManager
 {
+    private readonly Dictionary<IPlugin, List<string>> _commands = new();
     private readonly List<Assembly> _loadedAssemblies = new();
     private readonly Dictionary<IPlugin, bool> _loadedPlugins = new();
     private readonly Stack<string> _pluginLoadStack = new();
@@ -253,9 +255,7 @@ internal sealed class SimplePluginManager : IPluginManager
 
         var token = plugin.Configuration.Get<string>("discord.token");
         if (string.IsNullOrWhiteSpace(token))
-        {
             Logger.Warn(string.Format(LoggerMessages.NoPluginToken, plugin.PluginInfo.Name));
-        }
         else
         {
             var intents = DiscordIntents.AllUnprivileged;
@@ -284,9 +284,19 @@ internal sealed class SimplePluginManager : IPluginManager
 
         plugin.OnLoad().GetAwaiter().GetResult();
 
+        CommandsNextExtension? commandsNext = plugin.DiscordClient?.GetCommandsNext();
+        if (commandsNext is not null)
+        {
+            string[] commandNames = commandsNext.RegisteredCommands.Keys.ToArray();
+            Logger.Info(string.Format(LoggerMessages.PluginRegisteredCommands, pluginInfo.Name, commandNames.Length,
+                string.Join(", ", commandNames)));
+
+            CheckDuplicateCommands(plugin, commandNames);
+        }
+
         _loadedPlugins.Add(plugin, false);
 
-        Logger.Info(string.Format(LoggerMessages.LoadedPlugin, plugin.PluginInfo.Name, plugin.PluginInfo.Version));
+        Logger.Info(string.Format(LoggerMessages.LoadedPlugin, pluginInfo.Name, pluginInfo.Version));
         _pluginLoadStack.Pop();
         return plugin;
     }
@@ -355,5 +365,21 @@ internal sealed class SimplePluginManager : IPluginManager
 
         Logger.Info(string.Format(LoggerMessages.UnloadedPlugin, plugin.PluginInfo.Name, plugin.PluginInfo.Version));
         _loadedPlugins.Remove(plugin);
+    }
+
+    private void CheckDuplicateCommands(IPlugin plugin, IReadOnlyCollection<string> commands)
+    {
+        string pluginName = plugin.PluginInfo.Name;
+
+        foreach ((IPlugin current, List<string> currentCommands) in _commands)
+        {
+            string currentPluginName = current.PluginInfo.Name;
+
+            foreach (string command in commands)
+            {
+                if (currentCommands.Contains(command))
+                    Logger.Warn(string.Format(LoggerMessages.PluginCommandConflict, pluginName, command, currentPluginName));
+            }
+        }
     }
 }
