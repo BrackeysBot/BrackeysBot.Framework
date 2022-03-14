@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -292,7 +292,7 @@ internal sealed class SimplePluginManager : IPluginManager
             commandsNext.UnregisterConverter<TimeSpanConverter>();
             commandsNext.RegisterConverter(new TimeSpanArgumentConverter());
 
-            string[] commandNames = commandsNext.RegisteredCommands.Keys.ToArray();
+            string[] commandNames = commandsNext.RegisteredCommands.Keys.OrderBy(c => c).ToArray();
             Logger.Info(string.Format(LoggerMessages.PluginRegisteredCommands, pluginInfo.Name, commandNames.Length,
                 string.Join(", ", commandNames)));
 
