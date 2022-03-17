@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using BrackeysBot.API.Exceptions;
 using NLog;
 
@@ -63,6 +64,25 @@ public interface IPluginManager
     IPlugin? GetPlugin(string name);
 
     /// <summary>
+    ///     Returns a value indicating whether a specified plugin is currently loaded and enabled.
+    /// </summary>
+    /// <param name="plugin">The plugin whose enabled state to retrieve.</param>
+    /// <returns>
+    ///     <see langword="true" /> if <paramref name="plugin" /> refers to a plugin that is loaded and enabled; otherwise,
+    ///     <see langword="false" />.
+    /// </returns>
+    bool IsPluginEnabled(IPlugin plugin);
+
+    /// <summary>
+    ///     Returns a value indicating whether a specified plugin is currently loaded.
+    /// </summary>
+    /// <param name="plugin">The plugin whose loaded state to retrieve.</param>
+    /// <returns>
+    ///     <see langword="true" /> if <paramref name="plugin" /> refers to a loaded plugin; otherwise, <see langword="false" />.
+    /// </returns>
+    bool IsPluginLoaded(IPlugin plugin);
+
+    /// <summary>
     ///     Loads a plugin with a specified name.
     /// </summary>
     /// <param name="name">The name of the plugin to load, sans the <c>.dll</c> extension.</param>
@@ -81,6 +101,20 @@ public interface IPluginManager
     /// </summary>
     /// <returns>The read-only view of the loaded <see cref="MonoPlugin" /> instances.</returns>
     IReadOnlyList<IPlugin> LoadPlugins();
+
+    /// <summary>
+    ///     Retrieves a plugin by name, case-sensitively. A return value indicates whether the retrieval succeeded.
+    /// </summary>
+    /// <param name="name">The name of the plugin to retrieve.</param>
+    /// <param name="plugin">
+    ///     When this method returns, contains the plugin instance if the retrieval succeeded, or <see langword="null" /> if the
+    ///     retrieval failed. Retrieval can fail if there is no loaded plugin with the specified name.
+    /// </param>
+    /// <returns>
+    ///     <see langword="true" /> if a plugin with the name <paramref name="name" /> was successfully found; otherwise
+    ///     <see langword="false" />.
+    /// </returns>
+    bool TryGetPlugin(string name, [NotNullWhen(true)] out IPlugin? plugin);
 
     /// <summary>
     ///     Unloads a plugin.

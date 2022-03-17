@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Loader;
 using System.Threading;
 using System.Threading.Tasks;
 using BrackeysBot.API.Exceptions;
@@ -28,8 +30,9 @@ namespace BrackeysBot.Plugins;
 internal sealed class SimplePluginManager : IPluginManager
 {
     private readonly Dictionary<IPlugin, List<string>> _commands = new();
-    private readonly List<Assembly> _loadedAssemblies = new();
     private readonly Dictionary<IPlugin, bool> _loadedPlugins = new();
+
+    // private readonly Dictionary<IPlugin, bool> _loadedPlugins = new();
     private readonly Stack<string> _pluginLoadStack = new();
 
     /// <summary>
@@ -121,15 +124,37 @@ internal sealed class SimplePluginManager : IPluginManager
     /// <inheritdoc />
     public T? GetPlugin<T>() where T : IPlugin
     {
-        IPlugin? plugin = _loadedPlugins.Keys.FirstOrDefault(p => p is T);
-        if (plugin is T actual) return actual;
+        foreach ((IPlugin? plugin, bool _) in _loadedPlugins)
+        {
+            if (plugin is T actual)
+                return actual;
+        }
+
         return default;
     }
 
     /// <inheritdoc />
     public IPlugin? GetPlugin(string name)
     {
-        return _loadedPlugins.Keys.FirstOrDefault(p => string.Equals(p.PluginInfo.Name, name, StringComparison.Ordinal));
+        foreach ((IPlugin? plugin, bool _) in _loadedPlugins)
+        {
+            if (string.Equals(name, plugin.PluginInfo.Name))
+                return plugin;
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc />
+    public bool IsPluginEnabled(IPlugin plugin)
+    {
+        return _loadedPlugins.TryGetValue(plugin, out bool enabled) && enabled;
+    }
+
+    /// <inheritdoc />
+    public bool IsPluginLoaded(IPlugin plugin)
+    {
+        return _loadedPlugins.ContainsKey(plugin);
     }
 
     /// <inheritdoc />
@@ -138,9 +163,7 @@ internal sealed class SimplePluginManager : IPluginManager
         if (_pluginLoadStack.Contains(name))
             throw new CircularPluginDependencyException(name);
 
-        IPlugin? loadedPlugin =
-            _loadedPlugins.Keys.FirstOrDefault(p => string.Equals(p.PluginInfo.Name, name, StringComparison.Ordinal));
-        if (loadedPlugin is not null)
+        if (TryGetPlugin(name, out IPlugin? loadedPlugin))
         {
             Logger.Debug(string.Format(LoggerMessages.PluginAlreadyLoaded, name));
             return loadedPlugin;
@@ -148,147 +171,48 @@ internal sealed class SimplePluginManager : IPluginManager
 
         _pluginLoadStack.Push(name);
 
-        string pluginFileName = Path.Combine(PluginDirectory.FullName, $"{name}.dll");
-        if (!File.Exists(pluginFileName))
-            throw new PluginNotFoundException(name);
+        var file = new FileInfo(Path.Combine(PluginDirectory.FullName, $"{name}.dll"));
+        if (!file.Exists) throw new PluginNotFoundException(name);
 
-        var dependencies = new List<IPlugin>();
-        Assembly assembly = Assembly.LoadFile(pluginFileName); // DO NOT LoadFrom here. LoadFile does not load into domain
-        if (_loadedAssemblies.Exists(a => a.Location == assembly.Location))
-        {
-            Logger.Debug(string.Format(LoggerMessages.AssemblyAlreadyLoaded, assembly));
-            assembly = _loadedAssemblies.Find(a => a.Location == assembly.Location)!;
-        }
-        else
-        {
-            assembly = Assembly.LoadFrom(pluginFileName); // loads into domain
-            _loadedAssemblies.Add(assembly);
+        var context = new AssemblyLoadContext(name, true);
+        using FileStream stream = file.Open(FileMode.Open, FileAccess.Read);
+        Assembly assembly = context.LoadFromStream(stream);
 
-            Logger.Debug(string.Format(LoggerMessages.LoadedNewAssembly, assembly));
-        }
+        Type pluginType = GetPluginType(name, assembly, out PluginAttribute? pluginAttribute);
+        name = pluginAttribute.Name;
 
-        Type[] pluginTypes = assembly.GetTypes().Where(t => t.IsSubclassOf(typeof(MonoPlugin))).ToArray();
+        if (_loadedPlugins.Any(p => string.Equals(name, p.Key.PluginInfo.Name)))
+            throw new InvalidPluginException(name, string.Format(ExceptionMessages.DuplicatePluginName, name));
 
-        if (pluginTypes.Length == 0)
-            throw new InvalidPluginException(name, string.Format(ExceptionMessages.NoPluginClass, typeof(MonoPlugin)));
+        string version = pluginAttribute.Version;
 
-        if (pluginTypes.Length > 1)
-        {
-            throw new InvalidPluginException(name,
-                string.Format(ExceptionMessages.MultiplePluginsInAssembly, typeof(MonoPlugin)));
-        }
-
-        Type type = pluginTypes[0];
-
-        var pluginAttribute = type.GetCustomAttribute<PluginAttribute>();
-        if (pluginAttribute is null)
-            throw new InvalidPluginException(name, string.Format(ExceptionMessages.NoPluginAttribute, typeof(PluginAttribute)));
-
-        var dependenciesAttribute = type.GetCustomAttribute<PluginDependenciesAttribute>();
-        if (dependenciesAttribute?.Dependencies is {Length: > 0} dependencyNames)
-        {
-            Logger.Debug(string.Format(LoggerMessages.PluginRequiresDependencies, pluginAttribute.Name, dependencyNames.Length,
-                string.Join(", ", dependencyNames)));
-
-            foreach (string dependencyName in dependencyNames)
-            {
-                try
-                {
-                    IPlugin dependency = LoadPlugin(dependencyName);
-                    dependencies.Add(dependency);
-                }
-                catch (Exception exception)
-                {
-                    Logger.Error(exception, string.Format(LoggerMessages.CouldNotLoadDependency, dependencyName));
-                    return null!; // return value will be ignored anyway
-                }
-            }
-        }
-
-        string assemblyVersion = assembly.GetName().Version?.ToString(3) ?? pluginAttribute.Version;
+        string assemblyVersion = assembly.GetName().Version?.ToString(3) ?? version;
         if (!string.Equals(pluginAttribute.Version, assemblyVersion))
         {
             Logger.Warn(string.Format(LoggerMessages.PluginVersionMismatch, pluginAttribute.Version, assemblyVersion,
                 pluginAttribute.Name));
         }
 
-        PluginInfo.PluginAuthorInfo? author = null;
+        var descriptionAttribute = pluginType.GetCustomAttribute<PluginDescriptionAttribute>();
+        string? description = descriptionAttribute?.Description;
 
-        var authorAttribute = type.GetCustomAttribute<PluginAuthorAttribute>();
-        if (authorAttribute is not null)
-            author = new PluginInfo.PluginAuthorInfo(authorAttribute.Name, authorAttribute.Email, authorAttribute.Url);
+        IEnumerable<IPlugin> dependencies = EnumeratePluginDependencies(pluginType);
+        PluginInfo.PluginAuthorInfo? authorInfo = GetPluginAuthorInfo(pluginType);
+        var pluginInfo = new PluginInfo(name, version, description, authorInfo, dependencies.Select(d => d.PluginInfo).ToArray());
+        if (Activator.CreateInstance(pluginType) is not MonoPlugin instance)
+            throw new InvalidPluginException(name, ExceptionMessages.NoDerivationOfPluginClass);
 
-        var descriptionAttribute = type.GetCustomAttribute<PluginDescriptionAttribute>();
-        string description = descriptionAttribute?.Description ?? string.Empty;
+        instance.PluginInfo = pluginInfo;
+        instance.PluginManager = this;
+        instance.Logger = LogManager.GetLogger(pluginInfo.Name);
 
-        var pluginInfo = new PluginInfo(pluginAttribute.Name, pluginAttribute.Version, description, author,
-            dependencies.Select(p => p.PluginInfo).ToArray());
+        SetupPluginDataDirectory(pluginInfo, instance);
+        SetupPluginConfiguration(instance);
+        SetupPluginServices(instance, pluginInfo, pluginType);
 
-        if (_loadedPlugins.Keys.Any(p => string.Equals(p.PluginInfo.Name, pluginInfo.Name, StringComparison.Ordinal)))
-            throw new InvalidPluginException(name, string.Format(ExceptionMessages.DuplicatePluginName, pluginInfo.Name));
+        instance.OnLoad().GetAwaiter().GetResult();
 
-        if (Activator.CreateInstance(type) is not MonoPlugin plugin)
-        {
-            throw new TypeInitializationException(type.FullName,
-                new InvalidPluginException(name, ExceptionMessages.NoDerivationOfPluginClass));
-        }
-
-        plugin.PluginManager = this;
-        plugin.PluginInfo = pluginInfo;
-        plugin.Logger = LogManager.GetLogger(pluginInfo.Name);
-        (plugin.DataDirectory = new DirectoryInfo(Path.Combine(PluginDirectory.FullName, pluginInfo.Name))).Create();
-
-        var jsonFileConfiguration = new JsonFileConfiguration();
-        string configFilePath = Path.Combine(plugin.DataDirectory.FullName, "config.json");
-        jsonFileConfiguration.ConfigurationFile = new FileInfo(configFilePath);
-        jsonFileConfiguration.SaveDefault();
-        plugin.Configuration = jsonFileConfiguration;
-
-
-        var serviceCollection = new ServiceCollection();
-        serviceCollection.AddLogging(builder =>
-        {
-            builder.ClearProviders();
-            builder.AddNLog();
-        });
-
-        serviceCollection.AddSingleton<IPluginManager>(this);
-        serviceCollection.AddSingleton(plugin.GetType(), plugin);
-        serviceCollection.AddSingleton(plugin.Configuration);
-
-        var token = plugin.Configuration.Get<string>("discord.token");
-        if (string.IsNullOrWhiteSpace(token))
-            Logger.Warn(string.Format(LoggerMessages.NoPluginToken, plugin.PluginInfo.Name));
-        else
-        {
-            var intents = DiscordIntents.AllUnprivileged;
-            var intentsAttribute = type.GetCustomAttribute<PluginIntentsAttribute>();
-
-            if (intentsAttribute is not null)
-                intents = intentsAttribute.Intents;
-
-            serviceCollection.AddSingleton(provider =>
-            {
-                var client = new DiscordClient(new DiscordConfiguration
-                {
-                    Intents = intents,
-                    LoggerFactory = new NLogLoggerFactory(),
-                    ServiceProvider = provider,
-                    Token = token
-                });
-
-                plugin.DiscordClient = client;
-                return client;
-            });
-        }
-
-        plugin.ConfigureServices(serviceCollection);
-        plugin.ServiceProvider = serviceCollection.BuildServiceProvider();
-
-        plugin.OnLoad().GetAwaiter().GetResult();
-
-        CommandsNextExtension? commandsNext = plugin.DiscordClient?.GetCommandsNext();
-        if (commandsNext is not null)
+        if (instance.DiscordClient?.GetCommandsNext() is { } commandsNext)
         {
             commandsNext.UnregisterConverter<TimeSpanConverter>();
             commandsNext.RegisterConverter(new TimeSpanArgumentConverter());
@@ -297,15 +221,17 @@ internal sealed class SimplePluginManager : IPluginManager
             Logger.Info(string.Format(LoggerMessages.PluginRegisteredCommands, pluginInfo.Name, commandNames.Length,
                 string.Join(", ", commandNames)));
 
-            CheckDuplicateCommands(plugin, commandNames);
-            RegisterCommandEvents(plugin, commandsNext);
+            CheckDuplicateCommands(instance, commandNames);
+            RegisterCommandEvents(instance, commandsNext);
+
+            _commands.Add(instance, commandNames.ToList());
         }
 
-        _loadedPlugins.Add(plugin, false);
-
         Logger.Info(string.Format(LoggerMessages.LoadedPlugin, pluginInfo.Name, pluginInfo.Version));
+
         _pluginLoadStack.Pop();
-        return plugin;
+        _loadedPlugins.Add(instance, false);
+        return instance;
     }
 
     /// <inheritdoc />
@@ -331,6 +257,8 @@ internal sealed class SimplePluginManager : IPluginManager
             try
             {
                 plugin = LoadPlugin(pluginName);
+
+                // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
                 if (plugin is not null)
                     plugins.Add(plugin);
             }
@@ -351,8 +279,16 @@ internal sealed class SimplePluginManager : IPluginManager
     }
 
     /// <inheritdoc />
+    public bool TryGetPlugin(string name, [NotNullWhen(true)] out IPlugin? plugin)
+    {
+        plugin = _loadedPlugins.Keys.FirstOrDefault(p => string.Equals(name, p.PluginInfo.Name));
+        return plugin is not null;
+    }
+
+    /// <inheritdoc />
     public void UnloadPlugin(IPlugin plugin)
     {
+        if (!IsPluginLoaded(plugin)) return;
         if (plugin is not MonoPlugin monoPlugin) return;
 
         DisablePlugin(plugin);
@@ -370,8 +306,80 @@ internal sealed class SimplePluginManager : IPluginManager
         monoPlugin.DiscordClient = null;
         plugin.Dispose();
 
-        Logger.Info(string.Format(LoggerMessages.UnloadedPlugin, plugin.PluginInfo.Name, plugin.PluginInfo.Version));
+        monoPlugin.LoadContext.Unload();
         _loadedPlugins.Remove(plugin);
+
+        Logger.Info(string.Format(LoggerMessages.UnloadedPlugin, plugin.PluginInfo.Name, plugin.PluginInfo.Version));
+    }
+
+    private static Type GetPluginType(string name, Assembly assembly, out PluginAttribute pluginAttribute)
+    {
+        Type[] pluginTypes = assembly.GetTypes().Where(t => t.IsSubclassOf(typeof(MonoPlugin))).ToArray();
+        if (pluginTypes.Length == 0)
+            throw new InvalidPluginException(name, string.Format(ExceptionMessages.NoPluginClass, typeof(MonoPlugin)));
+
+        if (pluginTypes.Length > 1)
+        {
+            throw new InvalidPluginException(name,
+                string.Format(ExceptionMessages.MultiplePluginsInAssembly, typeof(MonoPlugin)));
+        }
+
+        Type pluginType = pluginTypes[0];
+        pluginAttribute = pluginType.GetCustomAttribute<PluginAttribute>()!;
+        if (pluginAttribute is null)
+            throw new InvalidPluginException(name, string.Format(ExceptionMessages.NoPluginAttribute, typeof(PluginAttribute)));
+
+        return pluginType;
+    }
+
+    private IEnumerable<IPlugin> EnumeratePluginDependencies(Type pluginType)
+    {
+        var pluginDependenciesAttribute = pluginType.GetCustomAttribute<PluginDependenciesAttribute>();
+        if (pluginDependenciesAttribute?.Dependencies is not {Length: > 0} requestedDependencies)
+            yield break;
+
+        foreach (string requestedDependency in requestedDependencies)
+        {
+            IPlugin? dependency;
+
+            try
+            {
+                dependency = LoadPlugin(requestedDependency);
+            }
+            catch (Exception exception)
+            {
+                Logger.Error(exception, string.Format(LoggerMessages.CouldNotLoadDependency, requestedDependency));
+                dependency = null;
+            }
+
+            if (dependency is not null)
+                yield return dependency;
+        }
+    }
+
+    private static PluginInfo.PluginAuthorInfo? GetPluginAuthorInfo(Type pluginType)
+    {
+        var authorAttribute = pluginType.GetCustomAttribute<PluginAuthorAttribute>();
+        if (authorAttribute is null)
+            return null;
+
+        return new PluginInfo.PluginAuthorInfo(authorAttribute.Name, authorAttribute.Email, authorAttribute.Url);
+    }
+
+    private void SetupPluginDataDirectory(PluginInfo pluginInfo, MonoPlugin instance)
+    {
+        var dataDirectory = new DirectoryInfo(Path.Combine(PluginDirectory.FullName, pluginInfo.Name));
+        dataDirectory.Create();
+        instance.DataDirectory = dataDirectory;
+    }
+
+    private static void SetupPluginConfiguration(MonoPlugin instance)
+    {
+        var jsonFileConfiguration = new JsonFileConfiguration();
+        string configFilePath = Path.Combine(instance.DataDirectory.FullName, "config.json");
+        jsonFileConfiguration.ConfigurationFile = new FileInfo(configFilePath);
+        jsonFileConfiguration.SaveDefault();
+        instance.Configuration = jsonFileConfiguration;
     }
 
     private void CheckDuplicateCommands(IPlugin plugin, IReadOnlyCollection<string> commands)
@@ -390,7 +398,7 @@ internal sealed class SimplePluginManager : IPluginManager
         }
     }
 
-    private void RegisterCommandEvents(IPlugin plugin, CommandsNextExtension commandsNext)
+    private static void RegisterCommandEvents(IPlugin plugin, CommandsNextExtension commandsNext)
     {
         commandsNext.CommandErrored += (_, args) =>
         {
@@ -399,5 +407,48 @@ internal sealed class SimplePluginManager : IPluginManager
             plugin.Logger.Error(args.Exception, $"An exception was thrown when executing {commandName}");
             return Task.CompletedTask;
         };
+    }
+
+    private void SetupPluginServices(MonoPlugin instance, PluginInfo pluginInfo, Type pluginType)
+    {
+        var serviceCollection = new ServiceCollection();
+        serviceCollection.AddLogging(builder =>
+        {
+            builder.ClearProviders();
+            builder.AddNLog();
+        });
+
+        serviceCollection.AddSingleton<IPluginManager>(this);
+        serviceCollection.AddSingleton(instance.GetType(), instance);
+        serviceCollection.AddSingleton(instance.Configuration);
+
+        var token = instance.Configuration.Get<string>("discord.token");
+        if (string.IsNullOrWhiteSpace(token))
+            Logger.Warn(string.Format(LoggerMessages.NoPluginToken, pluginInfo.Name));
+        else
+        {
+            var intents = DiscordIntents.AllUnprivileged;
+            var intentsAttribute = pluginType.GetCustomAttribute<PluginIntentsAttribute>();
+
+            if (intentsAttribute is not null)
+                intents = intentsAttribute.Intents;
+
+            serviceCollection.AddSingleton(provider =>
+            {
+                var client = new DiscordClient(new DiscordConfiguration
+                {
+                    Intents = intents,
+                    LoggerFactory = new NLogLoggerFactory(),
+                    ServiceProvider = provider,
+                    Token = token
+                });
+
+                instance.DiscordClient = client;
+                return client;
+            });
+        }
+
+        instance.ConfigureServices(serviceCollection);
+        instance.ServiceProvider = serviceCollection.BuildServiceProvider();
     }
 }

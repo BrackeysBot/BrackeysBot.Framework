@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.Loader;
 using System.Threading.Tasks;
 using BrackeysBot.API.Configuration;
 using DisCatSharp;
@@ -13,6 +14,12 @@ namespace BrackeysBot.API.Plugins;
 /// </summary>
 public abstract class MonoPlugin : IPlugin
 {
+    /// <inheritdoc />
+    ~MonoPlugin()
+    {
+        Dispose();
+    }
+
     /// <inheritdoc />
     public IConfiguration Configuration { get; internal set; } = null!;
 
@@ -30,6 +37,8 @@ public abstract class MonoPlugin : IPlugin
 
     /// <inheritdoc />
     public IServiceProvider ServiceProvider { get; internal set; } = null!;
+
+    internal AssemblyLoadContext LoadContext { get; set; } = null!;
 
     /// <summary>
     ///     Gets the underlying <see cref="DisCatSharp.DiscordClient" /> instance.
