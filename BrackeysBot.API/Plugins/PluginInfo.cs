@@ -5,7 +5,7 @@
 /// </summary>
 public class PluginInfo
 {
-    internal PluginInfo(string name, string version, string description, PluginAuthorInfo? author, PluginInfo[] dependencies)
+    internal PluginInfo(string name, string version, string? description, PluginAuthorInfo? author, PluginInfo[] dependencies)
     {
         Name = name;
         Version = version;
@@ -30,7 +30,7 @@ public class PluginInfo
     ///     Gets the description of this plugin.
     /// </summary>
     /// <value>The plugin description.</value>
-    public string Description { get; }
+    public string? Description { get; }
 
     /// <summary>
     ///     Gets the name of this plugin.
