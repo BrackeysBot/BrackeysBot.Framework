@@ -238,4 +238,22 @@ public static class DiscordEmbedBuilderExtensions
     {
         return embedBuilder.WithAuthor(author.UsernameWithDiscriminator, iconUrl: author.GetAvatarUrl(ImageFormat.Png));
     }
+
+    /// <summary>
+    ///     Populates the thumbnail and footer of this embed builder with the guild's branding.
+    /// </summary>
+    /// <param name="embedBuilder">The embed builder to modify.</param>
+    /// <param name="guild">The guild whose branding to apply.</param>
+    /// <param name="addThumbnail">
+    ///     <see langword="true" /> to include the guild icon as a thumbnail; otherwise, <see langword="false" />.
+    /// </param>
+    /// <returns><paramref name="embedBuilder" />, to allow for method chaining.</returns>
+    public static DiscordEmbedBuilder WithGuildInfo(this DiscordEmbedBuilder embedBuilder, DiscordGuild guild,
+        bool addThumbnail = true)
+    {
+        embedBuilder.WithFooter(guild.Name, guild.IconUrl);
+
+        if (addThumbnail) embedBuilder.WithThumbnail(guild.IconUrl);
+        return embedBuilder;
+    }
 }
