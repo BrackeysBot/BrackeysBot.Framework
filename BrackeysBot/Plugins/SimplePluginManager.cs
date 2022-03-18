@@ -202,6 +202,7 @@ internal sealed class SimplePluginManager : IPluginManager
         if (Activator.CreateInstance(pluginType) is not MonoPlugin instance)
             throw new InvalidPluginException(name, ExceptionMessages.NoDerivationOfPluginClass);
 
+        instance.LoadContext = context;
         instance.PluginInfo = pluginInfo;
         instance.PluginManager = this;
         instance.Logger = LogManager.GetLogger(pluginInfo.Name);
