@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -31,8 +31,6 @@ internal sealed class SimplePluginManager : IPluginManager
 {
     private readonly Dictionary<IPlugin, List<string>> _commands = new();
     private readonly Dictionary<IPlugin, bool> _loadedPlugins = new();
-
-    // private readonly Dictionary<IPlugin, bool> _loadedPlugins = new();
     private readonly Stack<string> _pluginLoadStack = new();
 
     /// <summary>
