@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -306,6 +306,7 @@ internal sealed class SimplePluginManager : IPluginManager
         plugin.Dispose();
 
         monoPlugin.LoadContext.Unload();
+        _commands.Remove(plugin);
         _loadedPlugins.Remove(plugin);
 
         Logger.Info(string.Format(LoggerMessages.UnloadedPlugin, plugin.PluginInfo.Name, plugin.PluginInfo.Version));
