@@ -11,6 +11,7 @@ using BrackeysBot.API;
 using BrackeysBot.API.Exceptions;
 using BrackeysBot.API.Plugins;
 using BrackeysBot.ArgumentConverters;
+using BrackeysBot.Commands;
 using BrackeysBot.Configuration;
 using BrackeysBot.Resources;
 using DisCatSharp;
@@ -83,6 +84,7 @@ internal sealed class SimplePluginManager : IPluginManager
 
         _loadedPlugins[plugin] = false;
 
+        monoPlugin.EnableTime = null;
         monoPlugin.DiscordClient?.DisconnectAsync();
         Logger.Info(string.Format(LoggerMessages.DisabledPlugin, plugin.PluginInfo.Name, plugin.PluginInfo.Version));
     }
@@ -94,6 +96,8 @@ internal sealed class SimplePluginManager : IPluginManager
         if (!_loadedPlugins.ContainsKey(plugin)) throw new PluginNotLoadedException(plugin);
         if (_loadedPlugins[plugin]) return;
         if (plugin is not MonoPlugin monoPlugin) return;
+
+        monoPlugin.EnableTime = DateTimeOffset.UtcNow;
 
         foreach (IHostedService hostedService in plugin.ServiceProvider.GetServices<IHostedService>())
         {
@@ -408,11 +412,14 @@ internal sealed class SimplePluginManager : IPluginManager
 
         client.MessageCreated += (sender, e) => ClientOnMessageCreated(plugin, sender, e);
 
-        return client.UseCommandsNext(new CommandsNextConfiguration
+        CommandsNextExtension? commandsNext = client.UseCommandsNext(new CommandsNextConfiguration
         {
             ServiceProvider = plugin.ServiceProvider,
             UseDefaultCommandHandler = false
         });
+
+        commandsNext.RegisterCommands<InfoCommand>();
+        return commandsNext;
     }
 
     private void SetupPluginDataDirectory(PluginInfo pluginInfo, MonoPlugin instance)
@@ -471,6 +478,7 @@ internal sealed class SimplePluginManager : IPluginManager
         });
 
         serviceCollection.AddSingleton<IPluginManager>(this);
+        serviceCollection.AddSingleton<IPlugin>(instance);
         serviceCollection.AddSingleton(instance.GetType(), instance);
         serviceCollection.AddSingleton(instance.Configuration);
 

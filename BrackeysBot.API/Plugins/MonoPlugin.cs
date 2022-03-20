@@ -14,17 +14,22 @@ namespace BrackeysBot.API.Plugins;
 /// </summary>
 public abstract class MonoPlugin : IPlugin
 {
-    /// <inheritdoc />
-    ~MonoPlugin()
-    {
-        Dispose();
-    }
+    internal AssemblyLoadContext LoadContext { get; set; } = null!;
+
+    /// <summary>
+    ///     Gets the underlying <see cref="DisCatSharp.DiscordClient" /> instance.
+    /// </summary>
+    /// <value>The underlying <see cref="DisCatSharp.DiscordClient" />.</value>
+    protected internal DiscordClient? DiscordClient { get; internal set; }
 
     /// <inheritdoc />
     public IConfiguration Configuration { get; internal set; } = null!;
 
     /// <inheritdoc />
     public DirectoryInfo DataDirectory { get; internal set; } = null!;
+
+    /// <inheritdoc />
+    public DateTimeOffset? EnableTime { get; internal set; } = null!;
 
     /// <inheritdoc />
     public ILogger Logger { get; internal set; } = null!;
@@ -38,17 +43,15 @@ public abstract class MonoPlugin : IPlugin
     /// <inheritdoc />
     public IServiceProvider ServiceProvider { get; internal set; } = null!;
 
-    internal AssemblyLoadContext LoadContext { get; set; } = null!;
-
-    /// <summary>
-    ///     Gets the underlying <see cref="DisCatSharp.DiscordClient" /> instance.
-    /// </summary>
-    /// <value>The underlying <see cref="DisCatSharp.DiscordClient" />.</value>
-    protected internal DiscordClient? DiscordClient { get; internal set; }
-
     /// <inheritdoc />
     public virtual void Dispose()
     {
+    }
+
+    /// <inheritdoc />
+    ~MonoPlugin()
+    {
+        Dispose();
     }
 
     /// <summary>

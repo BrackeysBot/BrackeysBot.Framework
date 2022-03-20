@@ -24,5 +24,5 @@ public interface IBot
     ///     Gets the bot version.
     /// </summary>
     /// <value>The bot version.</value>
-    string Version { get; }
+    static string Version { get; } = string.Empty;
 }

@@ -17,6 +17,15 @@ public interface IPlugin : IDisposable, IConfigurationHolder
     DirectoryInfo DataDirectory { get; }
 
     /// <summary>
+    ///     Gets the date and time at which this plugin was last enabled.
+    /// </summary>
+    /// <value>
+    ///     A <see cref="DateTimeOffset" /> representing the date and time at which this plugin was enabled, or
+    ///     <see langword="null" /> if this plugin is not currently enabled.
+    /// </value>
+    DateTimeOffset? EnableTime { get; }
+
+    /// <summary>
     ///     Gets the logger for this plugin.
     /// </summary>
     /// <value>The plugin's logger.</value>

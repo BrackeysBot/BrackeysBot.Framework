@@ -19,10 +19,7 @@ internal sealed class BrackeysBotApp : BackgroundService, IBot
 {
     private readonly List<Assembly> _libraries = new();
 
-    /// <summary>
-    ///     Initializes a new instance of the <see cref="BrackeysBotApp" /> class.
-    /// </summary>
-    public BrackeysBotApp()
+    static BrackeysBotApp()
     {
         var apiAssembly = Assembly.GetAssembly(typeof(IBot))!;
         var assembly = Assembly.GetAssembly(typeof(BrackeysBotApp))!;
@@ -35,7 +32,7 @@ internal sealed class BrackeysBotApp : BackgroundService, IBot
     ///     Gets the version of the API in use.
     /// </summary>
     /// <value>The API version.</value>
-    public string ApiVersion { get; }
+    public static string ApiVersion { get; }
 
     /// <summary>
     ///     Gets the <c>libraries</c> directory for this bot.
@@ -50,7 +47,7 @@ internal sealed class BrackeysBotApp : BackgroundService, IBot
     public IPluginManager PluginManager { get; } = new SimplePluginManager();
 
     /// <inheritdoc />
-    public string Version { get; }
+    public static string Version { get; }
 
     /// <summary>
     ///     Disables all currently-loaded and currently-enabled plugins.
