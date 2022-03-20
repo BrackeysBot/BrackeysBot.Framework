@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Runtime.Loader;
 using System.Threading;
 using System.Threading.Tasks;
+using BrackeysBot.API;
 using BrackeysBot.API.Exceptions;
 using BrackeysBot.API.Plugins;
 using BrackeysBot.ArgumentConverters;
@@ -15,6 +16,9 @@ using BrackeysBot.Resources;
 using DisCatSharp;
 using DisCatSharp.CommandsNext;
 using DisCatSharp.CommandsNext.Converters;
+using DisCatSharp.CommandsNext.Exceptions;
+using DisCatSharp.Entities;
+using DisCatSharp.EventArgs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -208,10 +212,11 @@ internal sealed class SimplePluginManager : IPluginManager
         SetupPluginDataDirectory(pluginInfo, instance);
         SetupPluginConfiguration(instance);
         SetupPluginServices(instance, pluginInfo, pluginType);
+        CommandsNextExtension? commandsNext = SetupPluginCommands(instance);
 
         instance.OnLoad().GetAwaiter().GetResult();
 
-        if (instance.DiscordClient?.GetCommandsNext() is { } commandsNext)
+        if (commandsNext is not null)
         {
             commandsNext.UnregisterConverter<TimeSpanConverter>();
             commandsNext.RegisterConverter(new TimeSpanArgumentConverter());
@@ -312,6 +317,37 @@ internal sealed class SimplePluginManager : IPluginManager
         Logger.Info(string.Format(LoggerMessages.UnloadedPlugin, plugin.PluginInfo.Name, plugin.PluginInfo.Version));
     }
 
+    private static Task ClientOnMessageCreated(MonoPlugin plugin, DiscordClient sender, MessageCreateEventArgs e)
+    {
+        CommandsNextExtension? commandsNext = sender.GetCommandsNext();
+        if (commandsNext is null) return Task.CompletedTask;
+
+        DiscordMessage? message = e.Message;
+        if (message.Content is not {Length: > 0} content) return Task.CompletedTask;
+
+        string prefix = plugin.Configuration.Get<string>("discord.prefix") ?? "[]";
+        int commandStart = message.GetStringPrefixLength(MentionUtility.MentionUser(sender.CurrentUser.Id, false) + ' ');
+        if (commandStart == -1)
+        {
+            commandStart = message.GetStringPrefixLength(MentionUtility.MentionUser(sender.CurrentUser.Id) + ' ');
+            if (commandStart == -1)
+            {
+                commandStart = message.GetStringPrefixLength(prefix);
+                if (commandStart == -1) return Task.CompletedTask;
+            }
+        }
+
+        prefix = content[..commandStart];
+        string commandString = content[commandStart..];
+
+        Command? command = commandsNext.FindCommand(commandString, out string? args);
+        if (command is null) return Task.CompletedTask;
+
+        CommandContext context = commandsNext.CreateContext(message, prefix, command, args);
+        Task.Run(async () => await commandsNext.ExecuteCommandAsync(context));
+        return Task.CompletedTask;
+    }
+
     private static Type GetPluginType(string name, Assembly assembly, out PluginAttribute pluginAttribute)
     {
         Type[] pluginTypes = assembly.GetTypes().Where(t => t.IsSubclassOf(typeof(MonoPlugin))).ToArray();
@@ -366,6 +402,19 @@ internal sealed class SimplePluginManager : IPluginManager
         return new PluginInfo.PluginAuthorInfo(authorAttribute.Name, authorAttribute.Email, authorAttribute.Url);
     }
 
+    private static CommandsNextExtension? SetupPluginCommands(MonoPlugin plugin)
+    {
+        if (plugin.ServiceProvider.GetService<DiscordClient>() is not { } client) return null;
+
+        client.MessageCreated += (sender, e) => ClientOnMessageCreated(plugin, sender, e);
+
+        return client.UseCommandsNext(new CommandsNextConfiguration
+        {
+            ServiceProvider = plugin.ServiceProvider,
+            UseDefaultCommandHandler = false
+        });
+    }
+
     private void SetupPluginDataDirectory(PluginInfo pluginInfo, MonoPlugin instance)
     {
         var dataDirectory = new DirectoryInfo(Path.Combine(PluginDirectory.FullName, pluginInfo.Name));
@@ -403,6 +452,9 @@ internal sealed class SimplePluginManager : IPluginManager
         commandsNext.CommandErrored += (_, args) =>
         {
             CommandContext context = args.Context;
+            if (context?.Command is null) return Task.CompletedTask;
+            if (args.Exception is ChecksFailedException) return Task.CompletedTask; // no need to log ChecksFailedException
+
             var commandName = $"{context.Prefix}{context.Command.Name}";
             plugin.Logger.Error(args.Exception, $"An exception was thrown when executing {commandName}");
             return Task.CompletedTask;
