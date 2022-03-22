@@ -13,6 +13,7 @@ using BrackeysBot.API.Plugins;
 using BrackeysBot.ArgumentConverters;
 using BrackeysBot.Commands;
 using BrackeysBot.Configuration;
+using BrackeysBot.Logging;
 using BrackeysBot.Resources;
 using DisCatSharp;
 using DisCatSharp.CommandsNext;
@@ -498,7 +499,7 @@ internal sealed class SimplePluginManager : IPluginManager
                 var client = new DiscordClient(new DiscordConfiguration
                 {
                     Intents = intents,
-                    LoggerFactory = new NLogLoggerFactory(),
+                    LoggerFactory = new PluginLoggerFactory(instance),
                     ServiceProvider = provider,
                     Token = token
                 });
