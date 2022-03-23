@@ -14,6 +14,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\BrackeysBot.API\BrackeysBot.API.csproj"/>
+        <ProjectReference Include="..\BrackeysBot.API\BrackeysBot.API\BrackeysBot.API.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
