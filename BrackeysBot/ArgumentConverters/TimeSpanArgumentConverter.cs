@@ -63,6 +63,10 @@ internal sealed class TimeSpanArgumentConverter : IArgumentConverter<TimeSpan>
                     result += TimeSpan.FromSeconds(unitValue);
                     unitValue = 0;
                     break;
+
+                default:
+                    // force DisCatSharp to consider another overload
+                    throw new FormatException();
             }
         }
 
