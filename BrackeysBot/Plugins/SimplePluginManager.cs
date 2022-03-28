@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -203,17 +203,19 @@ internal sealed class SimplePluginManager : IPluginManager
         var descriptionAttribute = pluginType.GetCustomAttribute<PluginDescriptionAttribute>();
         string? description = descriptionAttribute?.Description;
 
-        IEnumerable<IPlugin> dependencies = EnumeratePluginDependencies(pluginType);
+        IPlugin[] dependencies = EnumeratePluginDependencies(pluginType).ToArray();
         PluginInfo.PluginAuthorInfo? authorInfo = GetPluginAuthorInfo(pluginType);
         var pluginInfo = new PluginInfo(name, version, description, authorInfo, dependencies.Select(d => d.PluginInfo).ToArray());
         if (Activator.CreateInstance(pluginType) is not MonoPlugin instance)
             throw new InvalidPluginException(name, ExceptionMessages.NoDerivationOfPluginClass);
 
+        instance.Dependencies = dependencies.ToArray(); // defensive copy
         instance.LoadContext = context;
         instance.PluginInfo = pluginInfo;
         instance.PluginManager = this;
         instance.Logger = LogManager.GetLogger(pluginInfo.Name);
 
+        UpdatePluginDependants(instance);
         SetupPluginDataDirectory(pluginInfo, instance);
         SetupPluginConfiguration(instance);
         SetupPluginServices(instance, pluginInfo, pluginType);
@@ -301,6 +303,9 @@ internal sealed class SimplePluginManager : IPluginManager
         if (plugin is not MonoPlugin monoPlugin) return;
 
         DisablePlugin(plugin);
+
+        foreach (IPlugin dependant in plugin.Dependants)
+            UnloadPlugin(dependant);
 
         try
         {
@@ -511,5 +516,16 @@ internal sealed class SimplePluginManager : IPluginManager
 
         instance.ConfigureServices(serviceCollection);
         instance.ServiceProvider = serviceCollection.BuildServiceProvider();
+    }
+
+    private static void UpdatePluginDependants(IPlugin instance)
+    {
+        foreach (MonoPlugin dependency in instance.Dependencies.OfType<MonoPlugin>())
+        {
+            if (dependency.Dependants.Contains(instance)) continue;
+
+            var dependants = new List<IPlugin>(dependency.Dependants) {instance};
+            dependency.Dependants = dependants.ToArray();
+        }
     }
 }
