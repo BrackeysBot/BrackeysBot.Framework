@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
-using DisCatSharp.CommandsNext;
-using DisCatSharp.CommandsNext.Converters;
-using DisCatSharp.Entities;
+using DSharpPlus.CommandsNext;
+using DSharpPlus.CommandsNext.Converters;
+using DSharpPlus.Entities;
 
 namespace BrackeysBot.ArgumentConverters;
 

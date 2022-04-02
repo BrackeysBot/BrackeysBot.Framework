@@ -15,12 +15,12 @@ using BrackeysBot.Commands;
 using BrackeysBot.Configuration;
 using BrackeysBot.Logging;
 using BrackeysBot.Resources;
-using DisCatSharp;
-using DisCatSharp.CommandsNext;
-using DisCatSharp.CommandsNext.Converters;
-using DisCatSharp.CommandsNext.Exceptions;
-using DisCatSharp.Entities;
-using DisCatSharp.EventArgs;
+using DSharpPlus;
+using DSharpPlus.CommandsNext;
+using DSharpPlus.CommandsNext.Converters;
+using DSharpPlus.CommandsNext.Exceptions;
+using DSharpPlus.Entities;
+using DSharpPlus.EventArgs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -192,7 +192,6 @@ internal sealed class SimplePluginManager : IPluginManager
             throw new InvalidPluginException(name, string.Format(ExceptionMessages.DuplicatePluginName, name));
 
         string version = pluginAttribute.Version;
-
         string assemblyVersion = assembly.GetName().Version?.ToString(3) ?? version;
         if (!string.Equals(pluginAttribute.Version, assemblyVersion))
         {
@@ -420,7 +419,7 @@ internal sealed class SimplePluginManager : IPluginManager
 
         CommandsNextExtension? commandsNext = client.UseCommandsNext(new CommandsNextConfiguration
         {
-            ServiceProvider = plugin.ServiceProvider,
+            Services = plugin.ServiceProvider,
             UseDefaultCommandHandler = false
         });
 
@@ -505,7 +504,6 @@ internal sealed class SimplePluginManager : IPluginManager
                 {
                     Intents = intents,
                     LoggerFactory = new PluginLoggerFactory(instance),
-                    ServiceProvider = provider,
                     Token = token
                 });
 

@@ -4,10 +4,10 @@ using System.Threading.Tasks;
 using BrackeysBot.API.Attributes;
 using BrackeysBot.API.Extensions;
 using BrackeysBot.API.Plugins;
-using DisCatSharp;
-using DisCatSharp.CommandsNext;
-using DisCatSharp.CommandsNext.Attributes;
-using DisCatSharp.Entities;
+using DSharpPlus;
+using DSharpPlus.CommandsNext;
+using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.Entities;
 
 namespace BrackeysBot.Commands;
 
