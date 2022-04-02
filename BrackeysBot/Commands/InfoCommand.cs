@@ -60,9 +60,9 @@ internal sealed class InfoCommand : BaseCommandModule
 
         var builder = new StringBuilder();
         builder.AppendLine($"BrackeysBot: {BrackeysBotApp.Version}");
-        builder.AppendLine($"BrackeysBot.API: {BrackeysBotApp.ApiVersion}");
+        builder.AppendLine($"API: {BrackeysBotApp.ApiVersion}");
         builder.AppendLine($"{_plugin.PluginInfo.Name}: {_plugin.PluginInfo.Version}");
-        builder.AppendLine($"DisCatSharp: {context.Client.VersionString}");
+        builder.AppendLine($"D#+: {context.Client.VersionString}");
         builder.AppendLine($"CLR: {Environment.Version}");
         builder.AppendLine($"Host: {Environment.OSVersion}");
 
