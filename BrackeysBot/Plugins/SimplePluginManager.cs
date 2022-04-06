@@ -225,6 +225,8 @@ internal sealed class SimplePluginManager : IPluginManager
         if (commandsNext is not null)
         {
             commandsNext.UnregisterConverter<TimeSpanConverter>();
+            commandsNext.RegisterConverter(new DateOnlyArgumentConverter());
+            commandsNext.RegisterConverter(new TimeOnlyArgumentConverter());
             commandsNext.RegisterConverter(new TimeSpanArgumentConverter());
 
             string[] commandNames = commandsNext.RegisteredCommands.Keys.OrderBy(c => c).ToArray();
