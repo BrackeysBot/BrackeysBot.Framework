@@ -83,6 +83,8 @@ internal sealed class LoggingService : BackgroundService
         LogLevel minLevel = LogLevel.Debug;
 #else
         LogLevel minLevel = LogLevel.Info;
+        if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ENABLE_DEBUG_LOGGING")))
+            minLevel = LogLevel.Debug;
 #endif
         config.AddRule(minLevel, LogLevel.Fatal, consoleLogger);
         config.AddRule(minLevel, LogLevel.Fatal, fileLogger);
