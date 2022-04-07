@@ -1,0 +1,18 @@
+version: '3.9'
+services:
+  brackeysbot:
+    container_name: BrackeysBot
+    build: .
+    volumes:
+      - type: bind
+        source: ./plugins
+        target: /app/plugins
+      - type: bind
+        source: ./libraries
+        target: /app/libraries
+      - type: bind
+        source: ./logs
+        target: /app/logs
+    restart: always
+    env_file:
+      - .env
