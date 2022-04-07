@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Runtime.Loader;
 using System.Threading;
 using System.Threading.Tasks;
-using BrackeysBot.API;
+using BrackeysBot.API.Attributes;
 using BrackeysBot.API.Exceptions;
 using BrackeysBot.API.Plugins;
 using BrackeysBot.ArgumentConverters;
@@ -19,8 +19,6 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Converters;
 using DSharpPlus.CommandsNext.Exceptions;
-using DSharpPlus.Entities;
-using DSharpPlus.EventArgs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -216,7 +214,7 @@ internal sealed class SimplePluginManager : IPluginManager
 
         UpdatePluginDependants(instance);
         SetupPluginDataDirectory(pluginInfo, instance);
-        SetupPluginConfiguration(instance);
+        JsonFileConfiguration configuration = SetupPluginConfiguration(instance);
         SetupPluginServices(instance, pluginInfo, pluginType);
         CommandsNextExtension? commandsNext = SetupPluginCommands(instance);
 
@@ -229,11 +227,12 @@ internal sealed class SimplePluginManager : IPluginManager
             commandsNext.RegisterConverter(new TimeOnlyArgumentConverter());
             commandsNext.RegisterConverter(new TimeSpanArgumentConverter());
 
-            string[] commandNames = commandsNext.RegisteredCommands.Keys.OrderBy(c => c).ToArray();
+            string prefix = configuration.Get<string>("discord.prefix") ?? "[]";
+            string[] commandNames = commandsNext.RegisteredCommands.Keys.OrderBy(c => c).Select(c => prefix + c).ToArray();
             Logger.Info(string.Format(LoggerMessages.PluginRegisteredCommands, pluginInfo.Name, commandNames.Length,
                 string.Join(", ", commandNames)));
 
-            CheckDuplicateCommands(instance, commandNames);
+            CheckDuplicateCommands(instance, commandsNext.RegisteredCommands);
             RegisterCommandEvents(instance, commandsNext);
 
             _commands.Add(instance, commandNames.ToList());
@@ -328,37 +327,6 @@ internal sealed class SimplePluginManager : IPluginManager
         Logger.Info(string.Format(LoggerMessages.UnloadedPlugin, plugin.PluginInfo.Name, plugin.PluginInfo.Version));
     }
 
-    private static Task ClientOnMessageCreated(MonoPlugin plugin, DiscordClient sender, MessageCreateEventArgs e)
-    {
-        CommandsNextExtension? commandsNext = sender.GetCommandsNext();
-        if (commandsNext is null) return Task.CompletedTask;
-
-        DiscordMessage? message = e.Message;
-        if (message.Content is not {Length: > 0} content) return Task.CompletedTask;
-
-        string prefix = plugin.Configuration.Get<string>("discord.prefix") ?? "[]";
-        int commandStart = message.GetStringPrefixLength(MentionUtility.MentionUser(sender.CurrentUser.Id, false) + ' ');
-        if (commandStart == -1)
-        {
-            commandStart = message.GetStringPrefixLength(MentionUtility.MentionUser(sender.CurrentUser.Id) + ' ');
-            if (commandStart == -1)
-            {
-                commandStart = message.GetStringPrefixLength(prefix);
-                if (commandStart == -1) return Task.CompletedTask;
-            }
-        }
-
-        prefix = content[..commandStart];
-        string commandString = content[commandStart..];
-
-        Command? command = commandsNext.FindCommand(commandString, out string? args);
-        if (command is null) return Task.CompletedTask;
-
-        CommandContext context = commandsNext.CreateContext(message, prefix, command, args);
-        Task.Run(async () => await commandsNext.ExecuteCommandAsync(context));
-        return Task.CompletedTask;
-    }
-
     private static Type GetPluginType(string name, Assembly assembly, out PluginAttribute pluginAttribute)
     {
         Type[] pluginTypes = assembly.GetTypes().Where(t => t.IsSubclassOf(typeof(MonoPlugin))).ToArray();
@@ -417,12 +385,11 @@ internal sealed class SimplePluginManager : IPluginManager
     {
         if (plugin.ServiceProvider.GetService<DiscordClient>() is not { } client) return null;
 
-        client.MessageCreated += (sender, e) => ClientOnMessageCreated(plugin, sender, e);
-
-        CommandsNextExtension? commandsNext = client.UseCommandsNext(new CommandsNextConfiguration
+        CommandsNextExtension commandsNext = client.UseCommandsNext(new CommandsNextConfiguration
         {
             Services = plugin.ServiceProvider,
-            UseDefaultCommandHandler = false
+            UseDefaultCommandHandler = true,
+            StringPrefixes = new[] {plugin.Configuration.Get<string>("discord.prefix") ?? "[]"}
         });
 
         commandsNext.RegisterCommands<InfoCommand>();
@@ -436,16 +403,17 @@ internal sealed class SimplePluginManager : IPluginManager
         instance.DataDirectory = dataDirectory;
     }
 
-    private static void SetupPluginConfiguration(MonoPlugin instance)
+    private static JsonFileConfiguration SetupPluginConfiguration(MonoPlugin instance)
     {
         var jsonFileConfiguration = new JsonFileConfiguration();
         string configFilePath = Path.Combine(instance.DataDirectory.FullName, "config.json");
         jsonFileConfiguration.ConfigurationFile = new FileInfo(configFilePath);
         jsonFileConfiguration.SaveDefault();
         instance.Configuration = jsonFileConfiguration;
+        return jsonFileConfiguration;
     }
 
-    private void CheckDuplicateCommands(IPlugin plugin, IReadOnlyCollection<string> commands)
+    private void CheckDuplicateCommands(IPlugin plugin, IReadOnlyDictionary<string, Command> commands)
     {
         string pluginName = plugin.PluginInfo.Name;
 
@@ -453,10 +421,11 @@ internal sealed class SimplePluginManager : IPluginManager
         {
             string currentPluginName = current.PluginInfo.Name;
 
-            foreach (string command in commands)
+            foreach ((string name, Command command) in commands)
             {
-                if (currentCommands.Contains(command))
-                    Logger.Warn(string.Format(LoggerMessages.PluginCommandConflict, pluginName, command, currentPluginName));
+                if (!currentCommands.Contains(name)) continue;
+                if (command.ExecutionChecks.Any(c => c is RequireMentionPrefixAttribute)) continue;
+                Logger.Warn(string.Format(LoggerMessages.PluginCommandConflict, pluginName, command, currentPluginName));
             }
         }
     }
@@ -466,7 +435,7 @@ internal sealed class SimplePluginManager : IPluginManager
         commandsNext.CommandErrored += (_, args) =>
         {
             CommandContext context = args.Context;
-            if (context?.Command is null) return Task.CompletedTask;
+            if (context.Command is null) return Task.CompletedTask;
             if (args.Exception is ChecksFailedException) return Task.CompletedTask; // no need to log ChecksFailedException
 
             var commandName = $"{context.Prefix}{context.Command.Name}";
