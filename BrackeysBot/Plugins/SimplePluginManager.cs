@@ -201,6 +201,11 @@ internal sealed class SimplePluginManager : IPluginManager
         string? description = descriptionAttribute?.Description;
 
         IPlugin[] dependencies = EnumeratePluginDependencies(pluginType).ToArray();
+
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+        if (dependencies.Any(d => d is null))
+            return null!;
+
         PluginInfo.PluginAuthorInfo? authorInfo = GetPluginAuthorInfo(pluginType);
         var pluginInfo = new PluginInfo(name, version, description, authorInfo, dependencies.Select(d => d.PluginInfo).ToArray());
         if (Activator.CreateInstance(pluginType) is not MonoPlugin instance)
