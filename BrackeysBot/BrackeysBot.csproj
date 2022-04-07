@@ -5,9 +5,9 @@
         <TargetFramework>net6.0</TargetFramework>
         <Nullable>enable</Nullable>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-        <AssemblyVersion>4.0.0.15</AssemblyVersion>
-        <FileVersion>4.0.0-prerelease.15</FileVersion>
-        <Version>4.0.0-prerelease.15</Version>
+        <AssemblyVersion>4.0.0.20</AssemblyVersion>
+        <FileVersion>4.0.0-prerelease.20</FileVersion>
+        <Version>4.0.0-prerelease.20</Version>
         <NeutralLanguage>en-US</NeutralLanguage>
         <RepositoryUrl>https://github.com/BrackeysBot/BrackeysBot</RepositoryUrl>
     </PropertyGroup>
