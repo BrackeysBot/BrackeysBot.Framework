@@ -19,6 +19,7 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Converters;
 using DSharpPlus.CommandsNext.Exceptions;
+using DSharpPlus.SlashCommands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -243,6 +244,9 @@ internal sealed class SimplePluginManager : IPluginManager
             _commands.Add(instance, commandNames.ToList());
         }
 
+        if (instance.DiscordClient?.GetSlashCommands() is { } slashCommands)
+            slashCommands.RefreshCommands();
+
         Logger.Info(string.Format(LoggerMessages.LoadedPlugin, pluginInfo.Name, pluginInfo.Version));
 
         _pluginLoadStack.Pop();
@@ -398,6 +402,7 @@ internal sealed class SimplePluginManager : IPluginManager
         });
 
         commandsNext.RegisterCommands<InfoCommand>();
+        client.UseSlashCommands();
         return commandsNext;
     }
 
