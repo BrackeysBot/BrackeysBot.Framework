@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using BrackeysBot.API;
@@ -18,6 +19,7 @@ namespace BrackeysBot;
 internal sealed class BrackeysBotApp : BackgroundService, IBot
 {
     private readonly List<Assembly> _libraries = new();
+    private readonly List<IntPtr> _nativeLibraries = new();
 
     static BrackeysBotApp()
     {
@@ -35,10 +37,16 @@ internal sealed class BrackeysBotApp : BackgroundService, IBot
     public static string ApiVersion { get; }
 
     /// <summary>
-    ///     Gets the <c>libraries</c> directory for this bot.
+    ///     Gets the <c>libraries/managed</c> directory for this bot.
     /// </summary>
-    /// <value>The <c>libraries</c> directory.</value>
-    public DirectoryInfo LibrariesDirectory { get; } = new("libraries");
+    /// <value>The <c>libraries/managed</c> directory.</value>
+    public DirectoryInfo ManagedLibrariesDirectory { get; } = new(Path.Join("libraries", "managed"));
+
+    /// <summary>
+    ///     Gets the <c>libraries/native</c> directory for this bot.
+    /// </summary>
+    /// <value>The <c>libraries/native</c> directory.</value>
+    public DirectoryInfo NativeLibrariesDirectory { get; } = new(Path.Join("libraries", "native"));
 
     /// <inheritdoc />
     public ILogger Logger { get; } = LogManager.GetLogger("BrackeysBot");
@@ -68,13 +76,13 @@ internal sealed class BrackeysBotApp : BackgroundService, IBot
     }
 
     /// <summary>
-    ///     Loads third party dependencies as found <see cref="LibrariesDirectory" />.
+    ///     Loads third party dependencies as found <see cref="ManagedLibrariesDirectory" />.
     /// </summary>
-    public void LoadLibraries()
+    public void LoadManagedLibraries()
     {
-        if (!LibrariesDirectory.Exists) return;
+        if (!ManagedLibrariesDirectory.Exists) return;
 
-        foreach (FileInfo file in LibrariesDirectory.EnumerateFiles("*.dll"))
+        foreach (FileInfo file in ManagedLibrariesDirectory.EnumerateFiles("*.dll"))
         {
             try
             {
@@ -90,14 +98,40 @@ internal sealed class BrackeysBotApp : BackgroundService, IBot
         }
     }
 
+    /// <summary>
+    ///     Loads native libraries found in <see cref="NativeLibrariesDirectory" />.
+    /// </summary>
+    public void LoadNativeLibraries()
+    {
+        if (!NativeLibrariesDirectory.Exists) return;
+
+        foreach (FileInfo file in NativeLibrariesDirectory.EnumerateFiles("*"))
+        {
+            try
+            {
+                IntPtr ptr = NativeLibrary.Load(file.FullName);
+                _nativeLibraries.Add(ptr);
+                Logger.Debug($"Loaded {file.Name}");
+            }
+            catch (BadImageFormatException exception)
+            {
+                Logger.Error(exception, $"Could not load native library '{file.Name}' - SOME PLUGINS MAY NOT WORK");
+            }
+        }
+    }
+
     /// <inheritdoc />
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
         Logger.Info($"Starting Brackeys Bot version {Version} with API version {ApiVersion}");
 
-        LoadLibraries();
-        int libraryCount = _libraries.Count;
-        Logger.Info($"Loaded {libraryCount} {(libraryCount == 1 ? "library" : "libraries")}");
+        LoadNativeLibraries();
+        int nativeLibraryCount = _nativeLibraries.Count;
+        Logger.Info($"Loaded {nativeLibraryCount} {(nativeLibraryCount == 1 ? "native library" : "native libraries")}");
+
+        LoadManagedLibraries();
+        int managedLibraryCount = _libraries.Count;
+        Logger.Info($"Loaded {managedLibraryCount} {(managedLibraryCount == 1 ? "managed library" : "managed libraries")}");
 
         PluginManager.LoadPlugins();
         int loadedPluginCount = PluginManager.LoadedPlugins.Count;
@@ -116,6 +150,9 @@ internal sealed class BrackeysBotApp : BackgroundService, IBot
 
         foreach (IPlugin plugin in PluginManager.LoadedPlugins)
             PluginManager.UnloadPlugin(plugin);
+
+        foreach (IntPtr ptr in _nativeLibraries)
+            NativeLibrary.Free(ptr);
 
         return base.StopAsync(cancellationToken);
     }
