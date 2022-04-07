@@ -469,7 +469,7 @@ internal sealed class SimplePluginManager : IPluginManager
             if (intentsAttribute is not null)
                 intents = intentsAttribute.Intents;
 
-            serviceCollection.AddSingleton(provider =>
+            serviceCollection.AddSingleton(_ =>
             {
                 var client = new DiscordClient(new DiscordConfiguration
                 {
