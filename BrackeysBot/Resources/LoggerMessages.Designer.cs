@@ -223,11 +223,11 @@ namespace BrackeysBot.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Plugin version {0} and assembly version {1} do not match for &apos;{2}&apos;!.
+        ///   Looks up a localized string similar to The version of plugin &apos;{0}&apos; could not be detected!.
         /// </summary>
-        internal static string PluginVersionMismatch {
+        internal static string PluginVersionNotDetected {
             get {
-                return ResourceManager.GetString("PluginVersionMismatch", resourceCulture);
+                return ResourceManager.GetString("PluginVersionNotDetected", resourceCulture);
             }
         }
         

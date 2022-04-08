@@ -77,8 +77,8 @@
     <data name="PluginRequiresDependencies" xml:space="preserve">
         <value>Plugin '{0}' requires {1} dependencies: {2}</value>
     </data>
-    <data name="PluginVersionMismatch" xml:space="preserve">
-        <value>Plugin version {0} and assembly version {1} do not match for '{2}'!</value>
+    <data name="PluginVersionNotDetected" xml:space="preserve">
+        <value>The version of plugin '{0}' could not be detected!</value>
     </data>
     <data name="UnloadedPlugin" xml:space="preserve">
         <value>Unloaded plugin {0} {1}</value>

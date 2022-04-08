@@ -190,12 +190,12 @@ internal sealed class SimplePluginManager : IPluginManager
         if (_loadedPlugins.Any(p => string.Equals(name, p.Key.PluginInfo.Name)))
             throw new InvalidPluginException(name, string.Format(ExceptionMessages.DuplicatePluginName, name));
 
-        string version = pluginAttribute.Version;
-        string assemblyVersion = assembly.GetName().Version?.ToString(3) ?? version;
-        if (!string.Equals(pluginAttribute.Version, assemblyVersion))
+        var informationalVersionAttribute = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
+        string? version = informationalVersionAttribute?.InformationalVersion ?? assembly.GetName().Version?.ToString();
+        if (version is null)
         {
-            Logger.Warn(string.Format(LoggerMessages.PluginVersionMismatch, pluginAttribute.Version, assemblyVersion,
-                pluginAttribute.Name));
+            version ??= "0.0.0";
+            Logger.Warn(string.Format(LoggerMessages.PluginVersionNotDetected, name));
         }
 
         var descriptionAttribute = pluginType.GetCustomAttribute<PluginDescriptionAttribute>();
@@ -239,13 +239,14 @@ internal sealed class SimplePluginManager : IPluginManager
                 string.Join(", ", commandNames)));
 
             CheckDuplicateCommands(instance, commandsNext.RegisteredCommands);
-            RegisterCommandEvents(instance, commandsNext);
-
             _commands.Add(instance, commandNames.ToList());
         }
 
-        if (instance.DiscordClient?.GetSlashCommands() is { } slashCommands)
+        SlashCommandsExtension? slashCommands = instance.DiscordClient?.GetSlashCommands();
+        if (slashCommands is not null)
             slashCommands.RefreshCommands();
+
+        RegisterCommandEvents(instance, commandsNext, slashCommands);
 
         Logger.Info(string.Format(LoggerMessages.LoadedPlugin, pluginInfo.Name, pluginInfo.Version));
 
@@ -440,18 +441,45 @@ internal sealed class SimplePluginManager : IPluginManager
         }
     }
 
-    private static void RegisterCommandEvents(IPlugin plugin, CommandsNextExtension commandsNext)
+    private static void RegisterCommandEvents(IPlugin plugin, CommandsNextExtension? commandsNext,
+        SlashCommandsExtension? slashCommands)
     {
-        commandsNext.CommandErrored += (_, args) =>
+        if (commandsNext is not null)
         {
-            CommandContext context = args.Context;
-            if (context.Command is null) return Task.CompletedTask;
-            if (args.Exception is ChecksFailedException) return Task.CompletedTask; // no need to log ChecksFailedException
+            commandsNext.CommandErrored += (_, args) =>
+            {
+                CommandContext context = args.Context;
+                if (context.Command is null) return Task.CompletedTask;
+                if (args.Exception is ChecksFailedException) return Task.CompletedTask; // no need to log ChecksFailedException
 
-            var commandName = $"{context.Prefix}{context.Command.Name}";
-            plugin.Logger.Error(args.Exception, $"An exception was thrown when executing {commandName}");
-            return Task.CompletedTask;
-        };
+                var name = $"{context.Prefix}{context.Command.Name}";
+                plugin.Logger.Error(args.Exception, $"An exception was thrown when executing '{name}'");
+                return Task.CompletedTask;
+            };
+        }
+
+        if (slashCommands is not null)
+        {
+            slashCommands.ContextMenuErrored += (_, args) =>
+            {
+                ContextMenuContext context = args.Context;
+                if (args.Exception is ChecksFailedException) return Task.CompletedTask; // no need to log ChecksFailedException
+
+                string? name = context.Interaction.Data.Name;
+                plugin.Logger.Error(args.Exception, $"An exception was thrown when executing context menu '{name}'");
+                return Task.CompletedTask;
+            };
+
+            slashCommands.SlashCommandErrored += (_, args) =>
+            {
+                InteractionContext context = args.Context;
+                if (args.Exception is ChecksFailedException) return Task.CompletedTask; // no need to log ChecksFailedException
+
+                string? name = context.Interaction.Data.Name;
+                plugin.Logger.Error(args.Exception, $"An exception was thrown when executing slash command '{name}'");
+                return Task.CompletedTask;
+            };
+        }
     }
 
     private void SetupPluginServices(MonoPlugin instance, PluginInfo pluginInfo, Type pluginType)

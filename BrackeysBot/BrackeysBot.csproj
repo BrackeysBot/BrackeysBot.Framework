@@ -5,19 +5,31 @@
         <TargetFramework>net6.0</TargetFramework>
         <Nullable>enable</Nullable>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-        <AssemblyVersion>4.0.0.20</AssemblyVersion>
-        <FileVersion>4.0.0-prerelease.20</FileVersion>
-        <Version>4.0.0-prerelease.20</Version>
+        <VersionPrefix>4.0.0</VersionPrefix>
         <NeutralLanguage>en-US</NeutralLanguage>
         <RepositoryUrl>https://github.com/BrackeysBot/BrackeysBot</RepositoryUrl>
     </PropertyGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="..\BrackeysBot.API\BrackeysBot.API.csproj"/>
-        <ProjectReference Include="..\BrackeysBot.API\BrackeysBot.API\BrackeysBot.API.csproj"/>
-    </ItemGroup>
+    <PropertyGroup Condition="'$(VersionSuffix)' != '' And '$(BuildNumber)' == ''">
+        <Version>$(VersionPrefix)-$(VersionSuffix)</Version>
+        <AssemblyVersion>$(VersionPrefix).0</AssemblyVersion>
+        <FileVersion>$(VersionPrefix).0</FileVersion>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(VersionSuffix)' != '' And '$(BuildNumber)' != ''">
+        <Version>$(VersionPrefix)-$(VersionSuffix).$(BuildNumber)</Version>
+        <AssemblyVersion>$(VersionPrefix).$(BuildNumber)</AssemblyVersion>
+        <FileVersion>$(VersionPrefix).$(BuildNumber)</FileVersion>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(VersionSuffix)' == ''">
+        <Version>$(VersionPrefix)</Version>
+        <AssemblyVersion>$(VersionPrefix).0</AssemblyVersion>
+        <FileVersion>$(VersionPrefix).0</FileVersion>
+    </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="BrackeysBot.API" Version="4.0.0-nightly-10"/>
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1"/>
         <PackageReference Include="NLog.Extensions.Logging" Version="1.7.4"/>
     </ItemGroup>

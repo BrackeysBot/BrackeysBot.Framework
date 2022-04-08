@@ -26,8 +26,14 @@ internal sealed class BrackeysBotApp : BackgroundService, IBot
         var apiAssembly = Assembly.GetAssembly(typeof(IBot))!;
         var assembly = Assembly.GetAssembly(typeof(BrackeysBotApp))!;
 
-        ApiVersion = apiAssembly.GetName().Version!.ToString(3);
-        Version = assembly.GetName().Version!.ToString(3);
+        string? apiVersion = apiAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+        string? version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+
+        apiVersion ??= apiAssembly.GetName().Version?.ToString();
+        version ??= assembly.GetName().Version?.ToString();
+
+        ApiVersion = apiVersion ?? "0.0.0";
+        Version = version ?? "0.0.0";
     }
 
     /// <summary>
