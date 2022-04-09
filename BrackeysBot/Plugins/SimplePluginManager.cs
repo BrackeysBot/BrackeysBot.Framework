@@ -36,6 +36,7 @@ internal sealed class SimplePluginManager : IPluginManager
 {
     private readonly Dictionary<IPlugin, List<string>> _commands = new();
     private readonly Dictionary<IPlugin, bool> _loadedPlugins = new();
+    private readonly List<IPlugin> _tokenlessPlugins = new();
     private readonly Stack<string> _pluginLoadStack = new();
 
     /// <summary>
@@ -121,7 +122,8 @@ internal sealed class SimplePluginManager : IPluginManager
             return;
         }
 
-        monoPlugin.DiscordClient?.ConnectAsync();
+        if (!_tokenlessPlugins.Contains(plugin))
+            monoPlugin.DiscordClient.ConnectAsync();
 
         _loadedPlugins[plugin] = true;
         Logger.Info(string.Format(LoggerMessages.EnabledPlugin, plugin.PluginInfo.Name, plugin.PluginInfo.Version));
@@ -226,27 +228,30 @@ internal sealed class SimplePluginManager : IPluginManager
 
         instance.OnLoad().GetAwaiter().GetResult();
 
-        if (commandsNext is not null)
+        if (!_tokenlessPlugins.Contains(instance))
         {
-            commandsNext.UnregisterConverter<TimeSpanConverter>();
-            commandsNext.RegisterConverter(new DateOnlyArgumentConverter());
-            commandsNext.RegisterConverter(new TimeOnlyArgumentConverter());
-            commandsNext.RegisterConverter(new TimeSpanArgumentConverter());
+            if (commandsNext is not null)
+            {
+                commandsNext.UnregisterConverter<TimeSpanConverter>();
+                commandsNext.RegisterConverter(new DateOnlyArgumentConverter());
+                commandsNext.RegisterConverter(new TimeOnlyArgumentConverter());
+                commandsNext.RegisterConverter(new TimeSpanArgumentConverter());
 
-            string prefix = configuration.Get<string>("discord.prefix") ?? "[]";
-            string[] commandNames = commandsNext.RegisteredCommands.Keys.OrderBy(c => c).Select(c => prefix + c).ToArray();
-            Logger.Info(string.Format(LoggerMessages.PluginRegisteredCommands, pluginInfo.Name, commandNames.Length,
-                string.Join(", ", commandNames)));
+                string prefix = configuration.Get<string>("discord.prefix") ?? "[]";
+                string[] commandNames = commandsNext.RegisteredCommands.Keys.OrderBy(c => c).Select(c => prefix + c).ToArray();
+                Logger.Info(string.Format(LoggerMessages.PluginRegisteredCommands, pluginInfo.Name, commandNames.Length,
+                    string.Join(", ", commandNames)));
 
-            CheckDuplicateCommands(instance, commandsNext.RegisteredCommands);
-            _commands.Add(instance, commandNames.ToList());
+                CheckDuplicateCommands(instance, commandsNext.RegisteredCommands);
+                _commands.Add(instance, commandNames.ToList());
+            }
+
+            SlashCommandsExtension? slashCommands = instance.DiscordClient.GetSlashCommands();
+            slashCommands?.RefreshCommands();
+
+            RegisterCommandEvents(instance, commandsNext, slashCommands);
         }
 
-        SlashCommandsExtension? slashCommands = instance.DiscordClient?.GetSlashCommands();
-        if (slashCommands is not null)
-            slashCommands.RefreshCommands();
-
-        RegisterCommandEvents(instance, commandsNext, slashCommands);
 
         Logger.Info(string.Format(LoggerMessages.LoadedPlugin, pluginInfo.Name, pluginInfo.Version));
 
@@ -285,10 +290,10 @@ internal sealed class SimplePluginManager : IPluginManager
             }
             catch (Exception exception)
             {
-                if (plugin is MonoPlugin monoPlugin)
+                if (plugin is MonoPlugin monoPlugin && !_tokenlessPlugins.Contains(plugin))
                 {
-                    monoPlugin.DiscordClient?.Dispose();
-                    monoPlugin.DiscordClient = null;
+                    monoPlugin.DiscordClient.Dispose();
+                    monoPlugin.DiscordClient = null!;
                 }
 
                 plugin?.Dispose();
@@ -326,9 +331,10 @@ internal sealed class SimplePluginManager : IPluginManager
             Logger.Error(exception, string.Format(LoggerMessages.ExceptionWhenUnloadingPlugin, plugin.PluginInfo.Name));
         }
 
-        monoPlugin.DiscordClient?.Dispose();
-        monoPlugin.DiscordClient = null;
+        monoPlugin.DiscordClient.Dispose();
+        monoPlugin.DiscordClient = null!;
         plugin.Dispose();
+        _tokenlessPlugins.Remove(plugin);
 
         monoPlugin.LoadContext.Unload();
         _commands.Remove(plugin);
@@ -498,7 +504,10 @@ internal sealed class SimplePluginManager : IPluginManager
 
         var token = instance.Configuration.Get<string>("discord.token");
         if (string.IsNullOrWhiteSpace(token))
+        {
             Logger.Warn(string.Format(LoggerMessages.NoPluginToken, pluginInfo.Name));
+            _tokenlessPlugins.Add(instance);
+        }
         else
         {
             var intents = DiscordIntents.AllUnprivileged;
