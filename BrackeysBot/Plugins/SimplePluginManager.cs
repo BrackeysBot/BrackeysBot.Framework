@@ -416,7 +416,11 @@ internal sealed class SimplePluginManager : IPluginManager
         });
 
         commandsNext.RegisterCommands<InfoCommand>();
-        client.UseSlashCommands();
+        client.UseSlashCommands(new SlashCommandsConfiguration
+        {
+            Services = plugin.ServiceProvider
+        });
+
         return commandsNext;
     }
 
