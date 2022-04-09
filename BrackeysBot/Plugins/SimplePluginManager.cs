@@ -334,8 +334,12 @@ internal sealed class SimplePluginManager : IPluginManager
             Logger.Error(exception, string.Format(LoggerMessages.ExceptionWhenUnloadingPlugin, plugin.PluginInfo.Name));
         }
 
-        monoPlugin.DiscordClient.Dispose();
-        monoPlugin.DiscordClient = null!;
+        if (!_tokenlessPlugins.Contains(plugin))
+        {
+            monoPlugin.DiscordClient.Dispose();
+            monoPlugin.DiscordClient = null!;
+        }
+
         plugin.Dispose();
         _tokenlessPlugins.Remove(plugin);
 
