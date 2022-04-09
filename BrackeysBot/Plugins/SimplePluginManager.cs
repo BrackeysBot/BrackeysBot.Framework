@@ -227,7 +227,7 @@ internal sealed class SimplePluginManager : IPluginManager
         SetupPluginDataDirectory(pluginInfo, instance);
         JsonFileConfiguration configuration = SetupPluginConfiguration(instance);
         SetupPluginServices(instance, pluginInfo, pluginType);
-        CommandsNextExtension? commandsNext = SetupPluginCommands(instance);
+        (CommandsNextExtension? commandsNext, SlashCommandsExtension? slashCommands) = SetupPluginCommands(instance);
 
         instance.OnLoad().GetAwaiter().GetResult();
 
@@ -249,12 +249,8 @@ internal sealed class SimplePluginManager : IPluginManager
                 _commands.Add(instance, commandNames.ToList());
             }
 
-            SlashCommandsExtension? slashCommands = instance.DiscordClient.GetSlashCommands();
-            slashCommands?.RefreshCommands();
-
             RegisterCommandEvents(instance, commandsNext, slashCommands);
         }
-
 
         Logger.Info(string.Format(LoggerMessages.LoadedPlugin, pluginInfo.Name, pluginInfo.Version));
 
@@ -404,9 +400,9 @@ internal sealed class SimplePluginManager : IPluginManager
         return new PluginInfo.PluginAuthorInfo(authorAttribute.Name, authorAttribute.Email, authorAttribute.Url);
     }
 
-    private static CommandsNextExtension? SetupPluginCommands(MonoPlugin plugin)
+    private static (CommandsNextExtension?, SlashCommandsExtension?) SetupPluginCommands(MonoPlugin plugin)
     {
-        if (plugin.ServiceProvider.GetService<DiscordClient>() is not { } client) return null;
+        if (plugin.ServiceProvider.GetService<DiscordClient>() is not { } client) return (null, null);
 
         CommandsNextExtension commandsNext = client.UseCommandsNext(new CommandsNextConfiguration
         {
@@ -416,12 +412,12 @@ internal sealed class SimplePluginManager : IPluginManager
         });
 
         commandsNext.RegisterCommands<InfoCommand>();
-        client.UseSlashCommands(new SlashCommandsConfiguration
+        SlashCommandsExtension slashCommands = client.UseSlashCommands(new SlashCommandsConfiguration
         {
             Services = plugin.ServiceProvider
         });
 
-        return commandsNext;
+        return (commandsNext, slashCommands);
     }
 
     private void SetupPluginDataDirectory(PluginInfo pluginInfo, MonoPlugin instance)
