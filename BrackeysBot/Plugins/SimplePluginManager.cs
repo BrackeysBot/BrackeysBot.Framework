@@ -86,7 +86,10 @@ internal sealed class SimplePluginManager : IPluginManager
         _loadedPlugins[plugin] = false;
 
         monoPlugin.EnableTime = null;
-        monoPlugin.DiscordClient?.DisconnectAsync();
+
+        if (!_tokenlessPlugins.Contains(plugin))
+            monoPlugin.DiscordClient.DisconnectAsync();
+
         Logger.Info(string.Format(LoggerMessages.DisabledPlugin, plugin.PluginInfo.Name, plugin.PluginInfo.Version));
     }
 
