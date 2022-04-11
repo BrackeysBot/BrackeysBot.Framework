@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -141,11 +141,11 @@ internal sealed class BrackeysBotApp : BackgroundService, IBot
 
         LoadNativeLibraries();
         int nativeLibraryCount = _nativeLibraries.Count;
-        Logger.Info($"Loaded {nativeLibraryCount} {(nativeLibraryCount == 1 ? "native library" : "native libraries")}");
+        Logger.Info($"Loaded {nativeLibraryCount} native {(nativeLibraryCount == 1 ? "library" : "libraries")}");
 
         LoadManagedLibraries();
         int managedLibraryCount = _libraries.Count;
-        Logger.Info($"Loaded {managedLibraryCount} {(managedLibraryCount == 1 ? "managed library" : "managed libraries")}");
+        Logger.Info($"Loaded {managedLibraryCount} managed {(managedLibraryCount == 1 ? "library" : "libraries")}");
 
         PluginManager.LoadPlugins();
         int loadedPluginCount = PluginManager.LoadedPlugins.Count;
