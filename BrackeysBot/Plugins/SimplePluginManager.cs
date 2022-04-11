@@ -185,6 +185,9 @@ internal sealed class SimplePluginManager : IPluginManager
 
     private IPlugin? LoadPluginInternal(string name)
     {
+        if (name is null)
+            throw new ArgumentNullException(nameof(name));
+
         if (_pluginLoadStack.Contains(name))
             throw new CircularPluginDependencyException(name);
 
