@@ -35,10 +35,20 @@ namespace BrackeysBot.Plugins;
 /// </summary>
 internal sealed class SimplePluginManager : IPluginManager
 {
+    private readonly BrackeysBotApp _app;
     private readonly Dictionary<IPlugin, List<string>> _commands = new();
     private readonly Dictionary<IPlugin, bool> _loadedPlugins = new();
     private readonly List<IPlugin> _pluginsSansToken = new();
     private readonly Stack<string> _pluginLoadStack = new();
+
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="SimplePluginManager" /> class.
+    /// </summary>
+    /// <param name="app">The owning application.</param>
+    public SimplePluginManager(BrackeysBotApp app)
+    {
+        _app = app;
+    }
 
     /// <summary>
     ///     Gets the plugin directory.
@@ -203,7 +213,30 @@ internal sealed class SimplePluginManager : IPluginManager
         if (!file.Exists) throw new PluginNotFoundException(name);
 
         var context = new AssemblyLoadContext(name, true);
-        using FileStream stream = file.Open(FileMode.Open, FileAccess.Read);
+        context.Resolving += (_, assemblyName) =>
+        {
+            try
+            {
+                string assemblyPath = Path.Combine(_app.ManagedLibrariesDirectory.FullName, $"{assemblyName.Name}.dll");
+                if (!File.Exists(assemblyPath))
+                    throw new FileNotFoundException("Assumed library location not found.", assemblyPath);
+
+                using FileStream stream = File.OpenRead(assemblyPath);
+                using var buffer = new MemoryStream();
+                stream.CopyTo(buffer);
+                buffer.Position = 0;
+
+                return Assembly.Load(buffer.ToArray());
+            }
+            catch (Exception exception)
+            {
+                Logger.Warn(exception, $"Could not load assembly {assemblyName.Name} by assumed filepath. " +
+                                       "Attempting to load by name");
+                return Assembly.Load(assemblyName.FullName);
+            }
+        };
+
+        using FileStream stream = file.OpenRead();
         Assembly assembly = context.LoadFromStream(stream);
 
         Type pluginType = GetPluginType(name, assembly, out PluginAttribute? pluginAttribute);

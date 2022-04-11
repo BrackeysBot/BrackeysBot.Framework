@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -37,6 +37,14 @@ internal sealed class BrackeysBotApp : BackgroundService, IBot
     }
 
     /// <summary>
+    ///     Initializes a new instance of the <see cref="BrackeysBotApp" /> class.
+    /// </summary>
+    public BrackeysBotApp()
+    {
+        PluginManager = new SimplePluginManager(this);
+    }
+
+    /// <summary>
     ///     Gets the version of the API in use.
     /// </summary>
     /// <value>The API version.</value>
@@ -58,7 +66,7 @@ internal sealed class BrackeysBotApp : BackgroundService, IBot
     public ILogger Logger { get; } = LogManager.GetLogger("BrackeysBot");
 
     /// <inheritdoc />
-    public IPluginManager PluginManager { get; } = new SimplePluginManager();
+    public IPluginManager PluginManager { get; }
 
     /// <inheritdoc />
     public static string Version { get; }
