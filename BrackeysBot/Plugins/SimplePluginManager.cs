@@ -207,7 +207,11 @@ internal sealed class SimplePluginManager : IPluginManager
         name = pluginAttribute.Name;
 
         if (_loadedPlugins.Any(p => string.Equals(name, p.Key.PluginInfo.Name)))
+        {
+            _pluginLoadStack.Pop();
+            context.Unload();
             throw new InvalidPluginException(name, string.Format(ExceptionMessages.DuplicatePluginName, name));
+        }
 
         var informationalVersionAttribute = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
         string? version = informationalVersionAttribute?.InformationalVersion ?? assembly.GetName().Version?.ToString();
@@ -224,13 +228,21 @@ internal sealed class SimplePluginManager : IPluginManager
         // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
         if (dependencies.Any(d => d is null))
         {
+            Logger.Error("Found a null dependency! This is a bug! Report this to the BrackeysBot developers.");
+            context.Unload();
+            _pluginLoadStack.Pop();
             return null;
         }
 
+        Logger.Debug($"{name} loaded {dependencies.Length} {(dependencies.Length == 1 ? "dependency" : "dependencies")}");
         PluginInfo.PluginAuthorInfo? authorInfo = GetPluginAuthorInfo(pluginType);
         var pluginInfo = new PluginInfo(name, version, description, authorInfo, dependencies.Select(d => d.PluginInfo).ToArray());
         if (Activator.CreateInstance(pluginType) is not MonoPlugin instance)
+        {
+            context.Unload();
+            _pluginLoadStack.Pop();
             throw new InvalidPluginException(name, ExceptionMessages.NoDerivationOfPluginClass);
+        }
 
         instance.Dependencies = dependencies.ToArray(); // defensive copy
         instance.LoadContext = context;
