@@ -20,6 +20,7 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Converters;
 using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.SlashCommands;
+using Emzi0767.Utilities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -44,6 +45,9 @@ internal sealed class SimplePluginManager : IPluginManager
     /// </summary>
     /// <value>The plugin directory.</value>
     public DirectoryInfo PluginDirectory { get; } = new("plugins");
+
+    /// <inheritdoc />
+    public event AsyncEventHandler<IPluginManager, PluginLoadEventArgs>? PluginLoaded;
 
     /// <inheritdoc />
     public IReadOnlyList<IPlugin> EnabledPlugins => _loadedPlugins.Where(p => p.Value).Select(p => p.Key).ToArray();
@@ -256,6 +260,8 @@ internal sealed class SimplePluginManager : IPluginManager
 
         _pluginLoadStack.Pop();
         _loadedPlugins.Add(instance, false);
+
+        PluginLoaded?.Invoke(this, new PluginLoadEventArgs(instance));
         return instance;
     }
 
