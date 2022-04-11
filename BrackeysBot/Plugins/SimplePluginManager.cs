@@ -37,7 +37,7 @@ internal sealed class SimplePluginManager : IPluginManager
 {
     private readonly Dictionary<IPlugin, List<string>> _commands = new();
     private readonly Dictionary<IPlugin, bool> _loadedPlugins = new();
-    private readonly List<IPlugin> _tokenlessPlugins = new();
+    private readonly List<IPlugin> _pluginsSansToken = new();
     private readonly Stack<string> _pluginLoadStack = new();
 
     /// <summary>
@@ -91,7 +91,7 @@ internal sealed class SimplePluginManager : IPluginManager
 
         monoPlugin.EnableTime = null;
 
-        if (!_tokenlessPlugins.Contains(plugin))
+        if (!_pluginsSansToken.Contains(plugin))
             monoPlugin.DiscordClient.DisconnectAsync();
 
         Logger.Info(string.Format(LoggerMessages.DisabledPlugin, plugin.PluginInfo.Name, plugin.PluginInfo.Version));
@@ -129,7 +129,7 @@ internal sealed class SimplePluginManager : IPluginManager
             return;
         }
 
-        if (!_tokenlessPlugins.Contains(plugin))
+        if (!_pluginsSansToken.Contains(plugin))
             monoPlugin.DiscordClient.ConnectAsync();
 
         _loadedPlugins[plugin] = true;
@@ -235,7 +235,7 @@ internal sealed class SimplePluginManager : IPluginManager
 
         instance.OnLoad().GetAwaiter().GetResult();
 
-        if (!_tokenlessPlugins.Contains(instance))
+        if (!_pluginsSansToken.Contains(instance))
         {
             if (commandsNext is not null)
             {
@@ -295,7 +295,7 @@ internal sealed class SimplePluginManager : IPluginManager
             }
             catch (Exception exception)
             {
-                if (plugin is MonoPlugin monoPlugin && !_tokenlessPlugins.Contains(plugin))
+                if (plugin is MonoPlugin monoPlugin && !_pluginsSansToken.Contains(plugin))
                 {
                     monoPlugin.DiscordClient.Dispose();
                     monoPlugin.DiscordClient = null!;
@@ -336,14 +336,14 @@ internal sealed class SimplePluginManager : IPluginManager
             Logger.Error(exception, string.Format(LoggerMessages.ExceptionWhenUnloadingPlugin, plugin.PluginInfo.Name));
         }
 
-        if (!_tokenlessPlugins.Contains(plugin))
+        if (!_pluginsSansToken.Contains(plugin))
         {
             monoPlugin.DiscordClient.Dispose();
             monoPlugin.DiscordClient = null!;
         }
 
         plugin.Dispose();
-        _tokenlessPlugins.Remove(plugin);
+        _pluginsSansToken.Remove(plugin);
 
         monoPlugin.LoadContext.Unload();
         _commands.Remove(plugin);
@@ -519,7 +519,7 @@ internal sealed class SimplePluginManager : IPluginManager
         if (string.IsNullOrWhiteSpace(token))
         {
             Logger.Warn(string.Format(LoggerMessages.NoPluginToken, pluginInfo.Name));
-            _tokenlessPlugins.Add(instance);
+            _pluginsSansToken.Add(instance);
         }
         else
         {
