@@ -175,6 +175,16 @@ internal sealed class SimplePluginManager : IPluginManager
     /// <inheritdoc />
     public IPlugin LoadPlugin(string name)
     {
+        IPlugin? plugin = LoadPluginInternal(name);
+
+        if (plugin is null)
+            throw new TypeLoadException("Could not load plugin due to an unknown error.");
+
+        return plugin;
+    }
+
+    private IPlugin? LoadPluginInternal(string name)
+    {
         if (_pluginLoadStack.Contains(name))
             throw new CircularPluginDependencyException(name);
 
@@ -209,12 +219,13 @@ internal sealed class SimplePluginManager : IPluginManager
 
         var descriptionAttribute = pluginType.GetCustomAttribute<PluginDescriptionAttribute>();
         string? description = descriptionAttribute?.Description;
-
         IPlugin[] dependencies = EnumeratePluginDependencies(pluginType).ToArray();
 
         // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
         if (dependencies.Any(d => d is null))
-            return null!;
+        {
+            return null;
+        }
 
         PluginInfo.PluginAuthorInfo? authorInfo = GetPluginAuthorInfo(pluginType);
         var pluginInfo = new PluginInfo(name, version, description, authorInfo, dependencies.Select(d => d.PluginInfo).ToArray());
@@ -389,11 +400,11 @@ internal sealed class SimplePluginManager : IPluginManager
             catch (Exception exception)
             {
                 Logger.Error(exception, string.Format(LoggerMessages.CouldNotLoadDependency, requestedDependency));
-                dependency = null;
+                throw;
             }
 
-            if (dependency is not null)
-                yield return dependency;
+            Logger.Debug($"Found dependency {dependency.PluginInfo.Name} {dependency.PluginInfo.Version}");
+            yield return dependency;
         }
     }
 
