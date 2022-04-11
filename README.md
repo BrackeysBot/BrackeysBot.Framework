@@ -1,4 +1,5 @@
 <h1 align="center">BrackeysBot</h1>
+<p align="center"><img src="https://avatars.githubusercontent.com/u/102218313?s=200&v=4"></p>
 <p align="center"><i>A C# Discord framework tailored for the Brackeys Discord server, with support for hot-swappable plugins.</i></p>
 <p align="center">
 <a href="https://github.com/oliverbooth/BrackeysBot/releases"><img src="https://img.shields.io/github/v/release/oliverbooth/BrackeysBot?include_prereleases"></a>
@@ -9,7 +10,7 @@
 </p>
 
 ## About
-BrackeysBot is a C# Discord bot targeting .NET 6 with the goal of segregating functionality through the use of hot-swappable plugins.
+BrackeysBot is a C# Discord framework targeting .NET 6 with the goal of segregating functionality through the use of hot-swappable plugins.
 
 The aim of this project is to better organise the featureset of the ever-growing [BrackeysBot](https://github.com/yiliansource/brackeys-bot/), by splitting functionality into single-purpose bots while maintaining feature parity with version 3.
 
