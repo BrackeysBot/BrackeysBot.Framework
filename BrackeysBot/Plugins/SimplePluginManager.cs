@@ -564,7 +564,11 @@ internal sealed class SimplePluginManager : IPluginManager
             slashCommands.SlashCommandErrored += (_, args) =>
             {
                 InteractionContext context = args.Context;
-                if (args.Exception is ChecksFailedException) return Task.CompletedTask; // no need to log ChecksFailedException
+                if (args.Exception is SlashExecutionChecksFailedException)
+                {
+                    context.CreateResponseAsync("You do not have permission to use this command.", true);
+                    return Task.CompletedTask; // no need to log SlashExecutionChecksFailedException
+                }
 
                 string? name = context.Interaction.Data.Name;
                 plugin.Logger.Error(args.Exception, $"An exception was thrown when executing slash command '{name}'");
