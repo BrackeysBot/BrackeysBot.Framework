@@ -554,7 +554,11 @@ internal sealed class SimplePluginManager : IPluginManager
             slashCommands.ContextMenuErrored += (_, args) =>
             {
                 ContextMenuContext context = args.Context;
-                if (args.Exception is ChecksFailedException) return Task.CompletedTask; // no need to log ChecksFailedException
+                if (args.Exception is ContextMenuExecutionChecksFailedException)
+                {
+                    context.CreateResponseAsync("You do not have permission to use this command.", true);
+                    return Task.CompletedTask; // no need to log ChecksFailedException
+                }
 
                 string? name = context.Interaction.Data.Name;
                 plugin.Logger.Error(args.Exception, $"An exception was thrown when executing context menu '{name}'");
