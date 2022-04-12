@@ -19,6 +19,7 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Converters;
 using DSharpPlus.CommandsNext.Exceptions;
+using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using Emzi0767.Utilities;
 using Microsoft.Extensions.DependencyInjection;
@@ -537,6 +538,13 @@ internal sealed class SimplePluginManager : IPluginManager
     {
         if (commandsNext is not null)
         {
+            commandsNext.CommandExecuted += (_, args) =>
+            {
+                plugin.Logger.Info($"{args.Context.User} ran command {args.Context.Prefix}{args.Command.Name} " +
+                                   args.Context.RawArgumentString);
+                return Task.CompletedTask;
+            };
+
             commandsNext.CommandErrored += (_, args) =>
             {
                 CommandContext context = args.Context;
@@ -551,6 +559,36 @@ internal sealed class SimplePluginManager : IPluginManager
 
         if (slashCommands is not null)
         {
+            slashCommands.SlashCommandInvoked += (_, args) =>
+            {
+                plugin.Logger.Info($"{args.Context.User} ran slash command /{args.Context.CommandName} " +
+                                   string.Join(" ", args.Context.Interaction.Data.Options.Select(o => $"{o.Name}: '{o.Value}'")));
+                return Task.CompletedTask;
+            };
+
+            slashCommands.ContextMenuInvoked += (_, args) =>
+            {
+                DiscordInteractionResolvedCollection? resolved = args.Context.Interaction?.Data?.Resolved;
+                var properties = new List<string>();
+                if (resolved?.Attachments?.Count > 0)
+                    properties.Add($"attachments: {string.Join(", ", resolved.Attachments.Select(a => a.Value.Url))}");
+                if (resolved?.Channels?.Count > 0)
+                    properties.Add($"channels: {string.Join(", ", resolved.Channels.Select(c => c.Value.Name))}");
+                if (resolved?.Members?.Count > 0)
+                    properties.Add($"members: {string.Join(", ", resolved.Members.Select(m => m.Value.Id))}");
+                if (resolved?.Messages?.Count > 0)
+                    properties.Add($"messages: {string.Join(", ", resolved.Messages.Select(m => m.Value.Id))}");
+                if (resolved?.Roles?.Count > 0)
+                    properties.Add($"roles: {string.Join(", ", resolved.Roles.Select(r => r.Value.Id))}");
+                if (resolved?.Users?.Count > 0)
+                    properties.Add($"users: {string.Join(", ", resolved.Users.Select(r => r.Value.Id))}");
+
+                plugin.Logger.Info($"{args.Context.User} invoked context menu '{args.Context.CommandName}' with resolved " +
+                                   string.Join("; ", properties));
+
+                return Task.CompletedTask;
+            };
+
             slashCommands.ContextMenuErrored += (_, args) =>
             {
                 ContextMenuContext context = args.Context;
