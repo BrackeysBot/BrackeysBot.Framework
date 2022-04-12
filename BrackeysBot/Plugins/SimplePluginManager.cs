@@ -376,6 +376,19 @@ internal sealed class SimplePluginManager : IPluginManager
     }
 
     /// <inheritdoc />
+    public bool TryGetPlugin<T>(string name, [NotNullWhen(true)] out T? plugin) where T : IPlugin
+    {
+        if (TryGetPlugin(name, out IPlugin? found) && found is T actual) // yeah, weird cast. I know.
+        {
+            plugin = actual;
+            return true;
+        }
+
+        plugin = default;
+        return false;
+    }
+
+    /// <inheritdoc />
     public void UnloadPlugin(IPlugin plugin)
     {
         if (!IsPluginLoaded(plugin)) return;
