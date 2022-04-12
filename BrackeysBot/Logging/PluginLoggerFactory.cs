@@ -35,7 +35,7 @@ internal sealed class PluginLoggerFactory : ILoggerFactory
     // ReSharper disable once RedundantAssignment
     public ILogger CreateLogger(string categoryName)
     {
-        // categoryName will be in the form DisCatSharp.BaseDiscordClient - which we don't want.
+        // categoryName will be in the form DSharpPlus.BaseDiscordClient - which we don't want.
         // so explicitly use the plugin's name for clarity!
         categoryName = $"{_plugin.PluginInfo.Name}.DiscordClient";
 
