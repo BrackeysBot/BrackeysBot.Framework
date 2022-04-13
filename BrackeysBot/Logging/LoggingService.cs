@@ -78,6 +78,7 @@ internal sealed class LoggingService : BackgroundService
         var config = new LoggingConfiguration();
         var fileLogger = new LogFileTarget("FileLogger", this) {Layout = layout};
         var consoleLogger = new ColorfulConsoleTarget("ConsoleLogger") {Layout = layout};
+        var bufferedLogger = new BufferedLogTarget("BufferedLogger", TimeSpan.FromMinutes(5)) {Layout = layout};
 
 #if DEBUG
         LogLevel minLevel = LogLevel.Debug;
@@ -88,6 +89,7 @@ internal sealed class LoggingService : BackgroundService
 #endif
         config.AddRule(minLevel, LogLevel.Fatal, consoleLogger);
         config.AddRule(minLevel, LogLevel.Fatal, fileLogger);
+        config.AddRule(minLevel, LogLevel.Fatal, bufferedLogger);
 
         LogManager.Configuration = config;
 

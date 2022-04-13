@@ -6,7 +6,9 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using BrackeysBot.API;
+using BrackeysBot.API.Logging;
 using BrackeysBot.API.Plugins;
+using BrackeysBot.Logging;
 using BrackeysBot.Plugins;
 using Microsoft.Extensions.Hosting;
 using NLog;
@@ -43,6 +45,9 @@ internal sealed class BrackeysBotApp : BackgroundService, IBotApplication
     {
         PluginManager = new SimplePluginManager(this);
     }
+
+    /// <inheritdoc />
+    public event EventHandler<BufferedLogEventArgs>? BufferedLog;
 
     /// <summary>
     ///     Gets the version of the API in use.
@@ -137,6 +142,9 @@ internal sealed class BrackeysBotApp : BackgroundService, IBotApplication
     /// <inheritdoc />
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        var bufferedLogTarget = LogManager.Configuration.FindTargetByName<BufferedLogTarget>("BufferedLogger");
+        bufferedLogTarget.BufferedLog += BufferedLog;
+
         Logger.Info($"Starting Brackeys Bot version {Version} with API version {ApiVersion}");
 
         LoadNativeLibraries();
