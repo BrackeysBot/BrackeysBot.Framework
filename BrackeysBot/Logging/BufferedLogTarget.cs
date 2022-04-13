@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Text;
 using System.Timers;
 using BrackeysBot.API.Logging;
@@ -14,7 +13,7 @@ namespace BrackeysBot.Logging;
 /// </summary>
 internal sealed class BufferedLogTarget : TargetWithLayout
 {
-    private readonly MemoryStream _bufferedLogStream = new();
+    private readonly List<string> _bufferedLogEvents = new();
     private readonly Timer _timer = new();
 
     /// <summary>
@@ -39,28 +38,22 @@ internal sealed class BufferedLogTarget : TargetWithLayout
     /// <inheritdoc />
     protected override void Write(LogEventInfo logEvent)
     {
-        using var writer = new StreamWriter(_bufferedLogStream, Encoding.UTF8, leaveOpen: true);
-        writer.Write(Layout.Render(logEvent));
+        var builder = new StringBuilder();
+        builder.Append(Layout.Render(logEvent));
 
         if (logEvent.Exception is { } exception)
-            writer.Write($": {exception}");
+            builder.Append($": {exception}");
 
+        _bufferedLogEvents.Add(builder.ToString());
         base.Write(logEvent);
     }
 
     private void OnTimerElapsed(object? sender, ElapsedEventArgs e)
     {
-        var buffer = new List<string>();
-        using var reader = new StreamReader(_bufferedLogStream, Encoding.UTF8, leaveOpen: true);
-
-        while (reader.ReadLine() is { } line)
-            buffer.Add(line);
-
-        _bufferedLogStream.SetLength(0);
-        _bufferedLogStream.Position = 0;
-
         // we call ToArray() to prevent event subscribers from casting the IEnumerable<string> to List<string>,
         // allowing them to mutate it and effecting other subscribers.
-        BufferedLog?.Invoke(this, new BufferedLogEventArgs(buffer.ToArray()));
+        BufferedLog?.Invoke(this, new BufferedLogEventArgs(_bufferedLogEvents.ToArray()));
+
+        _bufferedLogEvents.Clear();
     }
 }
