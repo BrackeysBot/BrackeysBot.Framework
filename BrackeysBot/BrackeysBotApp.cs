@@ -143,7 +143,7 @@ internal sealed class BrackeysBotApp : BackgroundService, IBotApplication
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var bufferedLogTarget = LogManager.Configuration.FindTargetByName<BufferedLogTarget>("BufferedLogger");
-        bufferedLogTarget.BufferedLog += BufferedLog;
+        bufferedLogTarget.BufferedLog += (_, args) => BufferedLog?.Invoke(this, args);
 
         Logger.Info($"Starting Brackeys Bot version {Version} with API version {ApiVersion}");
 
