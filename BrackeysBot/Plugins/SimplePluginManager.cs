@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Runtime.Loader;
 using System.Threading;
 using System.Threading.Tasks;
+using BrackeysBot.API;
 using BrackeysBot.API.Attributes;
 using BrackeysBot.API.Exceptions;
 using BrackeysBot.API.Plugins;
@@ -50,6 +51,12 @@ internal sealed class SimplePluginManager : IPluginManager
     {
         _app = app;
     }
+
+    /// <summary>
+    ///     Gets the owning bot application.
+    /// </summary>
+    /// <value>The owning bot application.</value>
+    public IBotApplication BotApplication => _app;
 
     /// <summary>
     ///     Gets the plugin directory.

@@ -16,14 +16,14 @@ namespace BrackeysBot;
 /// <summary>
 ///     Represents a bot application instance.
 /// </summary>
-internal sealed class BrackeysBotApp : BackgroundService, IBot
+internal sealed class BrackeysBotApp : BackgroundService, IBotApplication
 {
     private readonly List<Assembly> _libraries = new();
     private readonly List<IntPtr> _nativeLibraries = new();
 
     static BrackeysBotApp()
     {
-        var apiAssembly = Assembly.GetAssembly(typeof(IBot))!;
+        var apiAssembly = Assembly.GetAssembly(typeof(IBotApplication))!;
         var assembly = Assembly.GetAssembly(typeof(BrackeysBotApp))!;
 
         string? apiVersion = apiAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
