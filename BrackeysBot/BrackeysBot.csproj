@@ -29,7 +29,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="BrackeysBot.API" Version="4.0.0-nightly.21"/>
+        <PackageReference Include="BrackeysBot.API" Version="4.0.0-nightly.22"/>
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1"/>
         <PackageReference Include="NLog.Extensions.Logging" Version="1.7.4"/>
     </ItemGroup>
