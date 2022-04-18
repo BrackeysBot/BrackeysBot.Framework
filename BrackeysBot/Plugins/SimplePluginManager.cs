@@ -547,7 +547,16 @@ internal sealed class SimplePluginManager : IPluginManager
         {
             commandsNext.CommandExecuted += (_, args) =>
             {
-                plugin.Logger.Info($"{args.Context.User} ran command {args.Context.Prefix}{args.Command.Name} " +
+                string name = args.Command.Name;
+                CommandGroup? parent = args.Command.Parent;
+
+                while (parent is not null)
+                {
+                    name = $"{parent.Name} {name}";
+                    parent = parent.Parent;
+                }
+
+                plugin.Logger.Info($"{args.Context.User} ran command {args.Context.Prefix}{name} " +
                                    args.Context.RawArgumentString);
                 return Task.CompletedTask;
             };
