@@ -43,6 +43,7 @@ internal sealed class BrackeysBotApp : BackgroundService, IBotApplication
     /// </summary>
     public BrackeysBotApp()
     {
+        IBotApplication.Current = this;
         PluginManager = new SimplePluginManager(this);
     }
 
