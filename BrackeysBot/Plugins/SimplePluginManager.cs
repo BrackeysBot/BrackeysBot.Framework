@@ -58,12 +58,6 @@ internal sealed class SimplePluginManager : IPluginManager
     /// <value>The owning bot application.</value>
     public IBotApplication BotApplication => _app;
 
-    /// <summary>
-    ///     Gets the plugin directory.
-    /// </summary>
-    /// <value>The plugin directory.</value>
-    public DirectoryInfo PluginDirectory { get; } = new("plugins");
-
     /// <inheritdoc />
     public event AsyncEventHandler<IPluginManager, PluginLoadEventArgs>? PluginLoaded;
 
@@ -75,6 +69,12 @@ internal sealed class SimplePluginManager : IPluginManager
 
     /// <inheritdoc />
     public ILogger Logger { get; } = LogManager.GetLogger(nameof(SimplePluginManager));
+
+    /// <inheritdoc />
+    public DirectoryInfo PluginDirectory { get; } = new("plugins");
+
+    /// <inheritdoc />
+    public FileInfo[] PluginFiles => PluginDirectory.Exists ? PluginDirectory.GetFiles("*.dll") : Array.Empty<FileInfo>();
 
     /// <inheritdoc />
     public void DisablePlugin(IPlugin plugin)
