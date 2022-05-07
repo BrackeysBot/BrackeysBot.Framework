@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Text;
 using System.Threading.Tasks;
-using BrackeysBot.API.Attributes;
 using BrackeysBot.API.Extensions;
 using BrackeysBot.API.Plugins;
 using DSharpPlus;
-using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using DSharpPlus.SlashCommands;
+using DSharpPlus.SlashCommands.Attributes;
 
 namespace BrackeysBot.Commands;
 
@@ -15,7 +14,7 @@ namespace BrackeysBot.Commands;
 ///     Represents a class which implements the <c>info</c> command. The <c>info</c> command requires the mention prefix to
 ///     discern which bot details are being requested.
 /// </summary>
-internal sealed class InfoCommand : BaseCommandModule
+internal sealed class InfoCommand : ApplicationCommandModule
 {
     private readonly IPlugin _plugin;
 
@@ -28,13 +27,11 @@ internal sealed class InfoCommand : BaseCommandModule
         _plugin = plugin;
     }
 
-    [Command("info")]
-    [Description("Displays information about the bot.")]
-    [RequireGuild]
-    [RequireMentionPrefix]
-    public async Task InfoCommandAsync(CommandContext context)
+    [SlashCommand("info", "Displays information about the bot.")]
+    [SlashRequireGuild]
+    public async Task InfoCommandAsync(InteractionContext context)
     {
-        await context.AcknowledgeAsync();
+        await context.DeferAsync(true).ConfigureAwait(false);
 
         DiscordColor color = 0;
         DiscordGuild guild = context.Guild;
@@ -67,7 +64,7 @@ internal sealed class InfoCommand : BaseCommandModule
         builder.AppendLine($"Host: {Environment.OSVersion}");
 
         embed.AddField(Formatter.Underline("Version"), Formatter.BlockCode(builder.ToString().Trim()));
-
-        await context.RespondAsync(embed);
+        ;
+        await context.EditResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed)).ConfigureAwait(false);
     }
 }

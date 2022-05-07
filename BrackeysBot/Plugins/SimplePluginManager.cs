@@ -497,11 +497,11 @@ internal sealed class SimplePluginManager : IPluginManager
             StringPrefixes = new[] {plugin.Configuration.Get<string>("discord.prefix") ?? "[]"}
         });
 
-        commandsNext.RegisterCommands<InfoCommand>();
         SlashCommandsExtension slashCommands = client.UseSlashCommands(new SlashCommandsConfiguration
         {
             Services = plugin.ServiceProvider
         });
+        slashCommands.RegisterCommands<InfoCommand>();
 
         return (commandsNext, slashCommands);
     }
