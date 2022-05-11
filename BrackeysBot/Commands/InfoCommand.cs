@@ -64,7 +64,7 @@ internal sealed class InfoCommand : ApplicationCommandModule
         builder.AppendLine($"Host: {Environment.OSVersion}");
 
         embed.AddField(Formatter.Underline("Version"), Formatter.BlockCode(builder.ToString().Trim()));
-        ;
+
         await context.EditResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed)).ConfigureAwait(false);
     }
 }
