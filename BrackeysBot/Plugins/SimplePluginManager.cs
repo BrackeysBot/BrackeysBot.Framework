@@ -21,6 +21,7 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Converters;
 using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.Entities;
+using DSharpPlus.Exceptions;
 using DSharpPlus.SlashCommands;
 using Emzi0767.Utilities;
 using Microsoft.Extensions.DependencyInjection;
@@ -569,12 +570,24 @@ internal sealed class SimplePluginManager : IPluginManager
 
                 var name = $"{context.Prefix}{context.Command.Name}";
                 plugin.Logger.Error(args.Exception, $"An exception was thrown when executing '{name}'");
+                if (args.Exception is DiscordException discordException)
+                    plugin.Logger.Error($"API response: {discordException.JsonMessage}");
+
                 return Task.CompletedTask;
             };
         }
 
         if (slashCommands is not null)
         {
+            slashCommands.AutocompleteErrored += (_, args) =>
+            {
+                plugin.Logger.Error(args.Exception, $"An exception was thrown when performing autocomplete");
+                if (args.Exception is DiscordException discordException)
+                    plugin.Logger.Error($"API response: {discordException.JsonMessage}");
+
+                return Task.CompletedTask;
+            };
+
             slashCommands.SlashCommandInvoked += (_, args) =>
             {
                 plugin.Logger.Info($"{args.Context.User} ran slash command /{args.Context.CommandName} " +
@@ -616,6 +629,9 @@ internal sealed class SimplePluginManager : IPluginManager
 
                 string? name = context.Interaction.Data.Name;
                 plugin.Logger.Error(args.Exception, $"An exception was thrown when executing context menu '{name}'");
+                if (args.Exception is DiscordException discordException)
+                    plugin.Logger.Error($"API response: {discordException.JsonMessage}");
+
                 return Task.CompletedTask;
             };
 
@@ -630,6 +646,9 @@ internal sealed class SimplePluginManager : IPluginManager
 
                 string? name = context.Interaction.Data.Name;
                 plugin.Logger.Error(args.Exception, $"An exception was thrown when executing slash command '{name}'");
+                if (args.Exception is DiscordException discordException)
+                    plugin.Logger.Error($"API response: {discordException.JsonMessage}");
+
                 return Task.CompletedTask;
             };
         }
