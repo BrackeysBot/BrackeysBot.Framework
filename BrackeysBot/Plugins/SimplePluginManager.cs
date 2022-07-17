@@ -590,8 +590,11 @@ internal sealed class SimplePluginManager : IPluginManager
 
             slashCommands.SlashCommandInvoked += (_, args) =>
             {
-                plugin.Logger.Info($"{args.Context.User} ran slash command /{args.Context.CommandName} " +
-                                   string.Join(" ", args.Context.Interaction.Data.Options.Select(o => $"{o.Name}: '{o.Value}'")));
+                var optionsString = "";
+                if (args.Context.Interaction?.Data?.Options is { } options)
+                    optionsString = $" {string.Join(" ", options.Select(o => $"{o?.Name}: '{o?.Value}'"))}";
+
+                plugin.Logger.Info($"{args.Context.User} ran slash command /{args.Context.CommandName}{optionsString}");
                 return Task.CompletedTask;
             };
 
